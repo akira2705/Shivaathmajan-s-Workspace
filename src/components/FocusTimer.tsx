@@ -63,24 +63,24 @@ export default function FocusTimer({ taskTitle, onClose }: FocusTimerProps) {
             width: 240,
             background: "var(--card)",
             border: "1px solid var(--gold-border)",
-            boxShadow: "0 8px 32px rgba(32,36,63,0.18)",
+            boxShadow: "0 8px 32px rgba(32,21,18,0.18)",
           }}
         >
           {/* Header */}
           <div className="px-4 py-3 flex items-center justify-between"
-            style={{ background: "var(--header)", borderBottom: "1px solid rgba(182,138,56,0.25)" }}>
+            style={{ background: "var(--header)", borderBottom: "1px solid rgba(184,48,26,0.25)" }}>
             <p className="font-mono text-[9px] uppercase tracking-[1.5px] font-bold"
-              style={{ color: phase === "work" ? "var(--gold-1)" : "var(--low)" }}>
+              style={{ color: phase === "work" ? "var(--gold-2)" : "var(--low)" }}>
               {phase === "work" ? "Focus" : "Break"}
             </p>
-            <button onClick={onClose} className="font-mono text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>✕</button>
+            <button onClick={onClose} className="font-mono text-[10px]" style={{ color: "var(--muted)" }}>✕</button>
           </div>
 
           <div className="p-4 flex flex-col items-center gap-3">
             {/* Ring */}
             <div className="relative">
               <svg width="88" height="88" viewBox="0 0 88 88">
-                <circle cx="44" cy="44" r="36" fill="none" stroke="rgba(32,36,63,0.08)" strokeWidth="6"/>
+                <circle cx="44" cy="44" r="36" fill="none" stroke="rgba(32,21,18,0.08)" strokeWidth="6"/>
                 <circle cx="44" cy="44" r="36" fill="none"
                   stroke={phase === "work" ? "var(--gold-2)" : "var(--low)"}
                   strokeWidth="6"

@@ -89,13 +89,10 @@ export default function TaskCard({
       style={{
         borderColor: selected
           ? "var(--gold-border)"
-          : isOverdue ? "rgba(158,43,58,0.22)" : "rgba(32,36,63,0.08)",
+          : isOverdue ? "rgba(192,40,26,0.22)" : "rgba(32,21,18,0.08)",
         boxShadow: selected ? "0 0 0 2px var(--gold-glow)" : undefined,
       }}
     >
-      {/* Left priority bar */}
-      <span className="shrink-0 w-[3px] rounded-l-sm" style={{ background: meta.color }} />
-
       <div className="flex-1 px-4 py-3.5">
         {/* Celebration burst */}
         <AnimatePresence>
@@ -119,7 +116,7 @@ export default function TaskCard({
               onClick={(e) => { e.stopPropagation(); onFocus(task.title); }}
               whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
               className="flex h-6 w-6 items-center justify-center rounded"
-              style={{ border: "1px solid rgba(182,138,56,0.30)", color: "var(--gold-3)", background: "rgba(182,138,56,0.06)" }}
+              style={{ border: "1px solid rgba(184,48,26,0.30)", color: "var(--gold-3)", background: "rgba(184,48,26,0.06)" }}
               title="Start focus timer"
             >
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
@@ -132,7 +129,7 @@ export default function TaskCard({
             onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
             whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
             className="flex h-6 w-6 items-center justify-center rounded"
-            style={{ border: "1px solid rgba(158,43,58,0.25)", color: "var(--urgent)", background: "rgba(158,43,58,0.06)" }}
+            style={{ border: "1px solid rgba(192,40,26,0.25)", color: "var(--urgent)", background: "rgba(192,40,26,0.06)" }}
             aria-label="Delete task"
           >
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -148,7 +145,7 @@ export default function TaskCard({
               className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-[3px] border"
               animate={{
                 backgroundColor: selected ? "var(--gold-2)" : "rgba(0,0,0,0)",
-                borderColor: selected ? "var(--gold-2)" : "rgba(32,36,63,0.22)",
+                borderColor: selected ? "var(--gold-2)" : "rgba(32,21,18,0.22)",
               }}
               transition={{ duration: 0.15 }}
             >
@@ -163,7 +160,7 @@ export default function TaskCard({
               className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-[3px] border"
               animate={{
                 backgroundColor: task.done ? meta.color : "rgba(0,0,0,0)",
-                borderColor: task.done ? meta.color : "rgba(32,36,63,0.22)",
+                borderColor: task.done ? meta.color : "rgba(32,21,18,0.22)",
               }}
               transition={{ duration: 0.15 }}
             >
@@ -196,10 +193,11 @@ export default function TaskCard({
               />
             ) : (
               <p
-                className="text-sm font-medium leading-snug"
+                className="flex items-center gap-2 text-sm font-medium leading-snug"
                 onDoubleClick={(e) => { e.stopPropagation(); setEditing(true); }}
                 style={{ textDecoration: task.done ? "line-through" : "none", color: task.done ? "var(--muted-2)" : "var(--text)" }}
               >
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: meta.color }} />
                 {task.title}
               </p>
             )}
@@ -224,7 +222,7 @@ export default function TaskCard({
                       exit={{ opacity: 0, y: 4, scale: 0.95 }}
                       transition={{ duration: 0.12 }}
                       className="absolute left-0 bottom-full mb-1 z-50 rounded border p-1.5 flex flex-col gap-0.5 min-w-[130px]"
-                      style={{ background: "var(--card)", borderColor: "var(--gold-border)", boxShadow: "0 8px 24px rgba(32,36,63,0.14)" }}
+                      style={{ background: "var(--card)", borderColor: "var(--gold-border)", boxShadow: "0 8px 24px rgba(32,21,18,0.14)" }}
                       onClick={(e) => e.stopPropagation()}
                     >
                       {PRIORITY_ORDER.map(p => {
@@ -249,14 +247,14 @@ export default function TaskCard({
               {/* Project badge */}
               {task.project && (
                 <span className="font-mono text-[9px] uppercase tracking-[1px] rounded px-2 py-0.5"
-                  style={{ background: "rgba(27,36,84,0.07)", color: "var(--header)", border: "1px solid rgba(27,36,84,0.18)" }}>
+                  style={{ background: "rgba(59,91,166,0.07)", color: "var(--medium)", border: "1px solid rgba(59,91,166,0.18)" }}>
                   {task.project}
                 </span>
               )}
 
               {task.tags.map((t) => (
                 <span key={t} className="font-mono text-[9px] uppercase tracking-[1px] rounded px-2 py-0.5"
-                  style={{ background: "rgba(32,36,63,0.05)", color: "var(--muted)", border: "1px solid rgba(32,36,63,0.10)" }}>
+                  style={{ background: "rgba(32,21,18,0.05)", color: "var(--muted)", border: "1px solid rgba(32,21,18,0.10)" }}>
                   {t}
                 </span>
               ))}
@@ -264,9 +262,9 @@ export default function TaskCard({
               {task.dueTime && (
                 <span className="font-mono text-[9px] uppercase tracking-[1px] rounded px-2 py-0.5"
                   style={{
-                    background: isOverdue ? "rgba(158,43,58,0.08)" : "rgba(42,122,74,0.08)",
+                    background: isOverdue ? "rgba(192,40,26,0.08)" : "rgba(47,122,82,0.08)",
                     color: isOverdue ? "var(--urgent)" : "var(--low)",
-                    border: `1px solid ${isOverdue ? "rgba(158,43,58,0.18)" : "rgba(42,122,74,0.16)"}`,
+                    border: `1px solid ${isOverdue ? "rgba(192,40,26,0.18)" : "rgba(47,122,82,0.16)"}`,
                   }}>
                   {isOverdue ? "OVERDUE" : "DUE"} {task.dueTime}
                 </span>
@@ -274,14 +272,14 @@ export default function TaskCard({
 
               {task.streak !== undefined && task.streak > 0 && (
                 <span className="font-mono text-[9px] uppercase tracking-[1px] rounded px-2 py-0.5"
-                  style={{ background: "rgba(42,122,74,0.08)", color: "var(--low)", border: "1px solid rgba(42,122,74,0.16)" }}>
+                  style={{ background: "rgba(47,122,82,0.08)", color: "var(--low)", border: "1px solid rgba(47,122,82,0.16)" }}>
                   {task.streak}d streak
                 </span>
               )}
 
               {task.recurring && task.recurring !== "none" && (
                 <span className="font-mono text-[9px] uppercase tracking-[1px] rounded px-2 py-0.5"
-                  style={{ background: "rgba(107,63,160,0.08)", color: "var(--followup)", border: "1px solid rgba(107,63,160,0.16)" }}>
+                  style={{ background: "rgba(125,79,160,0.08)", color: "var(--followup)", border: "1px solid rgba(125,79,160,0.16)" }}>
                   ↻ {task.recurring}
                 </span>
               )}
@@ -290,7 +288,7 @@ export default function TaskCard({
                 <a href={task.linkUrl} target="_blank" rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
                   className="font-mono text-[9px] uppercase tracking-[1px] rounded px-2 py-0.5"
-                  style={{ background: "rgba(182,138,56,0.08)", color: "var(--gold-3)", border: "1px solid rgba(182,138,56,0.22)" }}>
+                  style={{ background: "rgba(184,48,26,0.08)", color: "var(--gold-3)", border: "1px solid rgba(184,48,26,0.22)" }}>
                   {task.linkLabel ?? "Link"}
                 </a>
               )}
@@ -301,9 +299,9 @@ export default function TaskCard({
                   onClick={(e) => { e.stopPropagation(); setSubtasksOpen(o => !o); }}
                   className="font-mono text-[9px] uppercase tracking-[1px] rounded px-2 py-0.5 transition-opacity hover:opacity-75"
                   style={{
-                    background: subtasks.length > 0 ? "rgba(46,74,143,0.08)" : "rgba(32,36,63,0.04)",
+                    background: subtasks.length > 0 ? "rgba(59,91,166,0.08)" : "rgba(32,21,18,0.04)",
                     color: subtasks.length > 0 ? "var(--medium)" : "var(--muted)",
-                    border: `1px solid ${subtasks.length > 0 ? "rgba(46,74,143,0.20)" : "rgba(32,36,63,0.10)"}`,
+                    border: `1px solid ${subtasks.length > 0 ? "rgba(59,91,166,0.20)" : "rgba(32,21,18,0.10)"}`,
                   }}
                 >
                   {subtasks.length > 0 ? `${subDone}/${subtasks.length} subtasks` : "+ subtask"}
@@ -330,7 +328,7 @@ export default function TaskCard({
                           className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border transition-colors"
                           style={{
                             background: s.done ? "var(--gold-2)" : "transparent",
-                            borderColor: s.done ? "var(--gold-2)" : "rgba(32,36,63,0.22)",
+                            borderColor: s.done ? "var(--gold-2)" : "rgba(32,21,18,0.22)",
                           }}
                         >
                           {s.done && (
@@ -361,7 +359,7 @@ export default function TaskCard({
                         onKeyDown={e => { if (e.key === "Enter") addSubtask(); }}
                         placeholder="Add subtask…"
                         className="flex-1 bg-transparent text-xs outline-none rounded border px-2 py-1"
-                        style={{ borderColor: "rgba(182,138,56,0.20)", color: "var(--text)", caretColor: "var(--gold-3)" }}
+                        style={{ borderColor: "rgba(184,48,26,0.20)", color: "var(--text)", caretColor: "var(--gold-3)" }}
                       />
                       <button onClick={addSubtask}
                         className="font-mono text-[9px] px-2 py-1 rounded btn-gold">

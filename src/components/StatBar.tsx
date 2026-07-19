@@ -63,7 +63,7 @@ export default function StatBar({ tasks }: { tasks: Task[] }) {
             {pct}%
           </motion.span>
         </div>
-        <div className="mt-3 h-1.5 overflow-hidden rounded-full" style={{ background: "rgba(32,36,63,0.08)" }}>
+        <div className="mt-3 h-1.5 overflow-hidden rounded-full" style={{ background: "rgba(32,21,18,0.08)" }}>
           <motion.div
             className="h-full rounded-full progress-bar-gold"
             initial={{ width: 0 }}

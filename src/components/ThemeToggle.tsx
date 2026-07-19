@@ -25,8 +25,8 @@ export default function ThemeToggle() {
       onClick={toggle}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.9 }}
-      className="flex h-8 w-8 items-center justify-center rounded"
-      style={{ border: "1px solid rgba(255,255,255,0.16)", background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.55)" }}
+      className="flex h-8 w-8 items-center justify-center rounded-md"
+      style={{ border: "1px solid var(--border)", background: "var(--surface)", color: "var(--muted)" }}
       aria-label="Toggle dark mode"
       title={dark ? "Switch to light mode" : "Switch to dark mode"}
     >

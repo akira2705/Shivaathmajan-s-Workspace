@@ -4,7 +4,7 @@ import { todayStr } from "@/lib/date";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import WorldClock from "@/components/WorldClock";
+import AppShell from "@/components/AppShell";
 import StatBar from "@/components/StatBar";
 import TaskCard from "@/components/TaskCard";
 import SettingsModal from "@/components/SettingsModal";
@@ -13,8 +13,6 @@ import FocusTimer from "@/components/FocusTimer";
 import SearchModal from "@/components/SearchModal";
 import ShortcutsModal from "@/components/ShortcutsModal";
 import TemplatesModal from "@/components/TemplatesModal";
-import WeatherWidget from "@/components/WeatherWidget";
-import ThemeToggle from "@/components/ThemeToggle";
 import AiAssistant from "@/components/AiAssistant";
 import { useIsMobile } from "@/lib/useIsMobile";
 import { useApiKey } from "@/lib/useApiKey";
@@ -357,103 +355,14 @@ export default function TasksPage() {
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
     <>
-      <div className="min-h-screen" style={{ background: "var(--bg)" }}>
-
-        {/* ── NAVY HEADER BAND ─────────────────────────────────────────────────── */}
-        <motion.header
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45 }}
-          style={{ background: "var(--header)" }}
-          className="w-full"
-        >
-          <div className={`mx-auto max-w-[1600px] px-6 sm:px-8 ${isMobile ? "py-5" : "py-6"}`}>
-            <div className="flex items-start justify-between gap-4">
-
-              {/* Wordmark — links back to home */}
-              <Link href="/" style={{ textDecoration: "none" }}>
-                <h1 className="font-serif leading-none">
-                  <span className="gold-text-shimmer" style={{ fontSize: isMobile ? "2.8rem" : "3.8rem", fontWeight: 800, fontStyle: "italic" }}>
-                    TaskFlow
-                  </span>
-                </h1>
-                <p className="font-mono text-[10px] uppercase tracking-[2px] mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>
-                  {displayDate}
-                </p>
-              </Link>
-
-              {/* Right side: clock + controls */}
-              <div className="flex items-start gap-3">
-                {!isMobile && (
-                  <div className="flex items-center gap-2">
-                    <WeatherWidget />
-                    <div className="clock-panel px-4 py-3 text-right">
-                      <WorldClock />
-                    </div>
-                  </div>
-                )}
-                <div className="flex items-center gap-2 mt-1">
-                  <ThemeToggle />
-                  <motion.button
-                    onClick={() => setShortcutsOpen(true)}
-                    whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.9 }}
-                    className="flex h-8 w-8 items-center justify-center rounded font-mono text-sm"
-                    style={{ border: "1px solid rgba(255,255,255,0.16)", color: "rgba(255,255,255,0.55)", background: "rgba(255,255,255,0.06)" }}
-                    aria-label="Keyboard shortcuts"
-                    title="Keyboard shortcuts"
-                  >?</motion.button>
-                  <motion.button
-                    onClick={() => setSearchOpen(true)}
-                    whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.9 }}
-                    className="flex h-8 items-center gap-1.5 px-2.5 rounded"
-                    style={{ border: "1px solid rgba(255,255,255,0.16)", color: "rgba(255,255,255,0.55)", background: "rgba(255,255,255,0.06)" }}
-                    aria-label="Search"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
-                    </svg>
-                    <kbd className="font-mono text-[8px]">⌘K</kbd>
-                  </motion.button>
-                  <motion.button
-                    onClick={() => setSettingsOpen(true)}
-                    whileHover={{ rotate: 90 }} whileTap={{ scale: 0.9 }}
-                    transition={{ duration: 0.15 }}
-                    className="flex h-8 w-8 items-center justify-center rounded"
-                    style={{ border: "1px solid rgba(255,255,255,0.16)", color: "rgba(255,255,255,0.55)", background: "rgba(255,255,255,0.06)" }}
-                    aria-label="Settings"
-                  >
-                    <SettingsIcon />
-                  </motion.button>
-                </div>
-              </div>
-            </div>
-
-            {/* Nav pills — bottom of header (single-page demo: just Today) */}
-            {!isMobile && (
-              <div className="flex flex-wrap items-center gap-2 mt-5">
-                <span
-                  className="nav-pill flex items-center gap-1.5 px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[1.4px]"
-                  style={{ background: "rgba(255,255,255,0.10)", borderColor: "rgba(255,255,255,0.28)", color: "rgba(255,255,255,0.90)" }}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="14" height="14">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-                  </svg>
-                  Today
-                </span>
-                <Link href="/expenses"
-                  className="nav-pill flex items-center gap-1.5 px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[1.4px]">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="14" height="14">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3M3.75 4.5h16.5A1.5 1.5 0 0 1 21.75 6v12a1.5 1.5 0 0 1-1.5 1.5H3.75A1.5 1.5 0 0 1 2.25 18V6a1.5 1.5 0 0 1 1.5-1.5Z" />
-                  </svg>
-                  Expenses
-                </Link>
-              </div>
-            )}
-          </div>
-        </motion.header>
-
-        {/* ── BODY ────────────────────────────────────────────────────────────── */}
-        <main className={`mx-auto max-w-[1600px] px-6 sm:px-8 ${isMobile ? "pb-24 pt-6" : "pt-8 pb-16"}`}>
+      <AppShell
+        active="tasks"
+        title="Today"
+        subtitle={displayDate}
+        onOpenSearch={() => setSearchOpen(true)}
+        onOpenShortcuts={() => setShortcutsOpen(o => !o)}
+        onOpenSettings={() => setSettingsOpen(true)}
+      >
 
           {/* Daily Briefing */}
           <DailyBriefing tasks={tasks} />
@@ -483,7 +392,7 @@ export default function TasksPage() {
             className="glow-focus transition-all duration-200"
             style={{
               background: "var(--card)",
-              border: "2px solid var(--header)",
+              border: "2px solid var(--gold-border)",
               borderRadius: "99px",
               padding: "6px 6px 6px 20px",
             }}
@@ -492,11 +401,11 @@ export default function TasksPage() {
               {/* Mic button */}
               <motion.button
                 onClick={toggleListening}
-                animate={listening ? { boxShadow: ["0 0 0 0 rgba(182,138,56,0.55)", "0 0 0 10px rgba(182,138,56,0)"] } : { boxShadow: "none" }}
+                animate={listening ? { boxShadow: ["0 0 0 0 rgba(184,48,26,0.55)", "0 0 0 10px rgba(184,48,26,0)"] } : { boxShadow: "none" }}
                 transition={listening ? { duration: 1.3, repeat: Infinity } : {}}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
                 style={{
-                  border: `1px solid ${listening ? "var(--gold-border)" : "rgba(32,36,63,0.14)"}`,
+                  border: `1px solid ${listening ? "var(--gold-border)" : "rgba(32,21,18,0.14)"}`,
                   background: listening ? "var(--gold-glow)" : "transparent",
                   color: listening ? "var(--gold-3)" : "var(--muted)",
                 }}
@@ -545,16 +454,16 @@ export default function TasksPage() {
                 value={draftPriority}
                 onChange={(e) => setDraftPriority(e.target.value as Priority)}
                 className="rounded border bg-transparent px-2 py-1.5 font-mono text-[10px] uppercase tracking-wide outline-none"
-                style={{ borderColor: "rgba(32,36,63,0.12)", color: PRIORITY_META[draftPriority].color }}
+                style={{ borderColor: "rgba(32,21,18,0.12)", color: PRIORITY_META[draftPriority].color }}
               >
                 {PRIORITY_ORDER.map((p) => (
-                  <option key={p} value={p} style={{ background: "#FFFDF8", color: "#20243F" }}>{PRIORITY_META[p].label}</option>
+                  <option key={p} value={p} style={{ background: "#FFFFFF", color: "#201512" }}>{PRIORITY_META[p].label}</option>
                 ))}
               </select>
 
               {/* Due time */}
               <div className="flex items-center gap-1 rounded border px-2.5 py-1.5 font-mono text-[10px]"
-                style={{ borderColor: "rgba(32,36,63,0.12)" }} title="Due time">
+                style={{ borderColor: "rgba(32,21,18,0.12)" }} title="Due time">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ color: "var(--muted)" }}>
                   <circle cx="12" cy="12" r="9" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l3.75 3.75" />
                 </svg>
@@ -566,7 +475,7 @@ export default function TasksPage() {
 
               {/* Due date */}
               <div className="flex items-center gap-1 rounded border px-2.5 py-1.5 font-mono text-[10px]"
-                style={{ borderColor: "rgba(32,36,63,0.12)" }} title="Due date">
+                style={{ borderColor: "rgba(32,21,18,0.12)" }} title="Due date">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ color: "var(--muted)" }}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
                 </svg>
@@ -577,9 +486,9 @@ export default function TasksPage() {
               {/* Recurrence */}
               <select value={draftRecurring} onChange={(e) => setDraftRecurring(e.target.value as Recurrence)}
                 className="rounded border bg-transparent px-2 py-1.5 font-mono text-[10px] uppercase tracking-wide outline-none"
-                style={{ borderColor: "rgba(32,36,63,0.12)", color: "var(--followup)" }}>
+                style={{ borderColor: "rgba(32,21,18,0.12)", color: "var(--followup)" }}>
                 {RECURRENCE_OPTIONS.map((r) => (
-                  <option key={r.key} value={r.key} style={{ background: "#FFFDF8", color: "#20243F" }}>{r.label}</option>
+                  <option key={r.key} value={r.key} style={{ background: "#FFFFFF", color: "#201512" }}>{r.label}</option>
                 ))}
               </select>
 
@@ -602,7 +511,7 @@ export default function TasksPage() {
                 whileTap={{ scale: 0.97 }}
                 transition={{ duration: 0.1 }}
                 className="rounded-full border px-4 py-2 text-[11px] font-mono font-semibold uppercase tracking-[1px] disabled:opacity-50"
-                style={{ borderColor: "rgba(32,36,63,0.14)", color: "var(--muted)" }}
+                style={{ borderColor: "rgba(32,21,18,0.14)", color: "var(--muted)" }}
                 title="AI parse"
               >
                 {aiBusy ? "AI…" : "AI Add"}
@@ -643,7 +552,7 @@ export default function TasksPage() {
             return (
               <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
                 className="mt-5 rounded flex items-center justify-between px-4 py-3"
-                style={{ border: "1px solid rgba(158,43,58,0.25)", background: "rgba(158,43,58,0.05)" }}>
+                style={{ border: "1px solid rgba(192,40,26,0.25)", background: "rgba(192,40,26,0.05)" }}>
                 <span className="font-mono text-[10px] uppercase tracking-[1.5px] font-bold" style={{ color: "var(--urgent)" }}>
                   {overdue.length} Overdue Task{overdue.length !== 1 ? "s" : ""}
                 </span>
@@ -664,14 +573,14 @@ export default function TasksPage() {
             {/* Left controls */}
             <div className="flex flex-wrap items-center gap-2">
               {/* View toggle */}
-              <div className="flex rounded overflow-hidden" style={{ border: "1px solid rgba(32,36,63,0.14)" }}>
+              <div className="flex rounded overflow-hidden" style={{ border: "1px solid rgba(32,21,18,0.14)" }}>
                 {(["list","board"] as ViewMode[]).map((v) => (
                   <button key={v} onClick={() => setView(v)}
                     className="relative px-4 py-1.5 font-mono text-[10px] uppercase tracking-[1.2px] transition-all duration-150"
                     style={{
-                      background: view === v ? "var(--header)" : "var(--card)",
-                      color: view === v ? "var(--gold-1)" : "var(--muted)",
-                      borderRight: v === "list" ? "1px solid rgba(32,36,63,0.14)" : "none",
+                      background: view === v ? "var(--gold-2)" : "var(--card)",
+                      color: view === v ? "var(--card)" : "var(--muted)",
+                      borderRight: v === "list" ? "1px solid rgba(32,21,18,0.14)" : "none",
                     }}>
                     {v === "list" ? "List" : "Board"}
                   </button>
@@ -684,15 +593,15 @@ export default function TasksPage() {
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search tasks or tags…"
                 className="rounded border bg-transparent px-4 py-1.5 font-mono text-[10px] outline-none min-w-[180px] transition-all duration-150"
-                style={{ borderColor: "rgba(32,36,63,0.14)", color: "var(--text)" }}
+                style={{ borderColor: "rgba(32,21,18,0.14)", color: "var(--text)" }}
               />
 
               {/* Project filter */}
               <select value={projectFilter ?? ""} onChange={e => setProjectFilter(e.target.value || null)}
                 className="rounded border bg-transparent px-3 py-1.5 font-mono text-[10px] uppercase tracking-wide outline-none"
-                style={{ borderColor: "rgba(32,36,63,0.14)", color: projectFilter ? "var(--medium)" : "var(--muted)" }}>
-                <option value="" style={{ background: "#FFFDF8", color: "#20243F" }}>All Projects</option>
-                {PROJECTS.map(p => <option key={p} value={p} style={{ background: "#FFFDF8", color: "#20243F" }}>{p}</option>)}
+                style={{ borderColor: "rgba(32,21,18,0.14)", color: projectFilter ? "var(--medium)" : "var(--muted)" }}>
+                <option value="" style={{ background: "#FFFFFF", color: "#201512" }}>All Projects</option>
+                {PROJECTS.map(p => <option key={p} value={p} style={{ background: "#FFFFFF", color: "#201512" }}>{p}</option>)}
               </select>
 
               {/* Action buttons */}
@@ -732,7 +641,7 @@ export default function TasksPage() {
                 Archive
                 {archive.length > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full font-mono text-[8px] font-bold"
-                    style={{ background: "var(--header)", color: "var(--gold-1)" }}>
+                    style={{ background: "var(--gold-2)", color: "var(--card)" }}>
                     {archive.length > 99 ? "99+" : archive.length}
                   </span>
                 )}
@@ -757,7 +666,7 @@ export default function TasksPage() {
                   <button onClick={() => setTemplatesOpen(true)} className="btn-outline rounded px-3 py-1 font-mono text-[9px] uppercase tracking-[1px]">Save as Template</button>
                   <button onClick={() => bulkAction("delete")}
                     className="rounded px-3 py-1 font-mono text-[9px] uppercase tracking-[1px]"
-                    style={{ background: "rgba(158,43,58,0.06)", color: "var(--urgent)", border: "1px solid rgba(158,43,58,0.22)" }}>
+                    style={{ background: "rgba(192,40,26,0.06)", color: "var(--urgent)", border: "1px solid rgba(192,40,26,0.22)" }}>
                     Delete All
                   </button>
                 </motion.div>
@@ -810,10 +719,10 @@ export default function TasksPage() {
                       if (!visible && group.length === 0) return null;
                       return (
                         <div key={p} ref={(el) => { groupRefs.current[p] = el; }}>
-                          {/* Group header — editorial style */}
-                          <div className="mb-4 flex items-center gap-4">
-                            <div className="w-[3px] self-stretch rounded-full" style={{ background: meta.color, minHeight: "1.2rem" }} />
-                            <span className="font-serif text-xl font-bold italic" style={{ color: meta.color }}>
+                          {/* Group header */}
+                          <div className="mb-4 flex items-center gap-3">
+                            <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: meta.color }} />
+                            <span className="font-serif text-xl font-bold tracking-tight" style={{ color: meta.color }}>
                               {meta.label}
                             </span>
                             <div className="h-px flex-1" style={{ background: "var(--gold-border)" }} />
@@ -845,7 +754,7 @@ export default function TasksPage() {
                         <div key={p} ref={(el) => { groupRefs.current[p] = el; }}
                           className="board-col p-3 min-h-[200px]">
                           <div className="mb-3 flex items-center justify-between border-b pb-2.5" style={{ borderColor: "var(--gold-border)" }}>
-                            <span className="font-serif text-base font-bold italic" style={{ color: meta.color }}>
+                            <span className="font-serif text-base font-bold tracking-tight" style={{ color: meta.color }}>
                               {meta.label}
                             </span>
                             <span className="rounded px-2 py-0.5 font-mono text-[9px]"
@@ -871,7 +780,7 @@ export default function TasksPage() {
               </AnimatePresence>
             )}
           </div>
-        </main>
+      </AppShell>
 
         {/* ── Settings modal ────────────────────────────────────────────────── */}
         <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} apiKey={apiKey} onSave={setApiKey} />
@@ -881,7 +790,7 @@ export default function TasksPage() {
           {summaryOpen && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 z-50 flex items-center justify-center"
-              style={{ background: "rgba(32,36,63,0.45)", backdropFilter: "blur(6px)" }}
+              style={{ background: "rgba(32,21,18,0.45)", backdropFilter: "blur(6px)" }}
               onClick={() => setSummaryOpen(false)}>
               <motion.div
                 initial={{ opacity: 0, scale: 0.94, y: 16 }}
@@ -890,8 +799,8 @@ export default function TasksPage() {
                 transition={{ type: "spring", stiffness: 320, damping: 28 }}
                 onClick={(e) => e.stopPropagation()}
                 className="w-[min(520px,90vw)] rounded glass p-6"
-                style={{ boxShadow: "0 20px 60px rgba(32,36,63,0.20)" }}>
-                <h2 className="font-serif text-2xl font-bold italic" style={{ color: "var(--header)" }}>
+                style={{ boxShadow: "0 20px 60px rgba(32,21,18,0.20)" }}>
+                <h2 className="font-serif text-2xl font-bold tracking-tight" style={{ color: "var(--text)" }}>
                   Daily Summary
                 </h2>
                 <div className="mt-3 min-h-[80px] text-sm leading-relaxed" style={{ color: "var(--text-2)" }}>
@@ -914,16 +823,16 @@ export default function TasksPage() {
             <>
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="fixed inset-0 z-40"
-                style={{ background: "rgba(32,36,63,0.35)", backdropFilter: "blur(4px)" }}
+                style={{ background: "rgba(32,21,18,0.35)", backdropFilter: "blur(4px)" }}
                 onClick={() => setArchiveOpen(false)} />
               <motion.aside
                 initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
                 transition={{ type: "spring", stiffness: 320, damping: 32 }}
                 className="fixed right-0 top-0 z-50 h-full w-[min(420px,95vw)] flex flex-col"
-                style={{ background: "var(--card)", borderLeft: "1px solid var(--gold-border)", boxShadow: "-8px 0 32px rgba(32,36,63,0.12)" }}>
+                style={{ background: "var(--card)", borderLeft: "1px solid var(--gold-border)", boxShadow: "-8px 0 32px rgba(32,21,18,0.12)" }}>
                 <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid var(--gold-border)" }}>
                   <div>
-                    <h2 className="font-serif text-xl font-bold italic" style={{ color: "var(--header)" }}>Completed</h2>
+                    <h2 className="font-serif text-xl font-bold tracking-tight" style={{ color: "var(--text)" }}>Completed</h2>
                     <p className="font-mono text-[10px] mt-0.5 uppercase tracking-[1.2px]" style={{ color: "var(--muted)" }}>
                       {archive.length} task{archive.length !== 1 ? "s" : ""} archived
                     </p>
@@ -957,7 +866,7 @@ export default function TasksPage() {
                             transition={{ type: "spring", stiffness: 300, damping: 28 }}
                             className="flex items-start gap-3 rounded p-3"
                             style={{ background: "var(--card-2)", border: "1px solid var(--gold-border)" }}>
-                            <div className="w-[3px] self-stretch rounded-full shrink-0" style={{ background: meta.color }} />
+                            <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full" style={{ background: meta.color }} />
                             <div className="flex-1 min-w-0">
                               <p className="text-sm leading-snug line-through" style={{ color: "var(--muted)", textDecorationColor: "var(--muted-2)" }}>
                                 {task.title}
@@ -993,7 +902,7 @@ export default function TasksPage() {
         {/* ── Mobile bottom nav ─────────────────────────────────────────────── */}
         {isMobile && (
           <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-1 py-2"
-            style={{ background: "rgba(27,36,84,0.97)", borderTop: "1px solid rgba(182,138,56,0.25)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)" }}>
+            style={{ background: "rgba(32,21,18,0.97)", borderTop: "1px solid rgba(184,48,26,0.25)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)" }}>
             {[
               { href: "/",      label: "Home",  svg: <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /> },
               { href: "/tasks", label: "Tasks", svg: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 9h3.75M6.75 19.5H17.25A2.25 2.25 0 0 0 19.5 17.25V6.75A2.25 2.25 0 0 0 17.25 4.5H6.75A2.25 2.25 0 0 0 4.5 6.75v10.5A2.25 2.25 0 0 0 6.75 19.5Z" /> },
@@ -1023,7 +932,7 @@ export default function TasksPage() {
               exit={{ opacity: 0, y: 30, scale: 0.92 }}
               transition={{ type: "spring", stiffness: 320, damping: 28 }}
               className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded px-5 py-3"
-              style={{ background: "var(--card)", border: "1px solid var(--gold-border)", boxShadow: "0 8px 30px rgba(32,36,63,0.16)" }}>
+              style={{ background: "var(--card)", border: "1px solid var(--gold-border)", boxShadow: "0 8px 30px rgba(32,21,18,0.16)" }}>
               <span className="text-sm font-mono" style={{ color: "var(--text-2)" }}>
                 Deleted &ldquo;{undoTask.title.slice(0, 32)}{undoTask.title.length > 32 ? "…" : ""}&rdquo;
               </span>
@@ -1033,7 +942,6 @@ export default function TasksPage() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
 
       {/* ── AI Assistant ──────────────────────────────────────────────────── */}
       <AiAssistant

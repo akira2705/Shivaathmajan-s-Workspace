@@ -29,7 +29,7 @@ export default function SettingsModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center"
-          style={{ background: "rgba(32,36,63,0.45)", backdropFilter: "blur(6px)" }}
+          style={{ background: "rgba(32,21,18,0.45)", backdropFilter: "blur(6px)" }}
           onClick={onClose}
         >
           <motion.div
@@ -39,9 +39,9 @@ export default function SettingsModal({
             transition={{ type: "spring", stiffness: 320, damping: 28 }}
             onClick={(e) => e.stopPropagation()}
             className="w-[min(420px,90vw)] rounded p-6 glass"
-            style={{ boxShadow: "0 20px 60px rgba(32,36,63,0.20)" }}
+            style={{ boxShadow: "0 20px 60px rgba(32,21,18,0.20)" }}
           >
-            <h2 className="font-serif text-2xl font-bold italic" style={{ color: "var(--header)" }}>
+            <h2 className="font-serif text-2xl font-bold tracking-tight" style={{ color: "var(--text)" }}>
               Settings
             </h2>
             <p className="mt-2 font-mono text-[11px]" style={{ color: "var(--muted)" }}>

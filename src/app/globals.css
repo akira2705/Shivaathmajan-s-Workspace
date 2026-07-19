@@ -1,61 +1,88 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════════════
-   GILDED EDITORIAL — TaskFlow Design System
-   Palette: Royal Navy #1B2454 × Gold #D8B45A × Warm Parchment #F0EBE0
+   EMBER DASHBOARD — TaskFlow Design System
+   Palette: Warm Neutrals × Ember Red-Orange accent
+   Structure inspired by clean fintech SaaS dashboards (sidebar + topbar),
+   recolored entirely in the ember family.
    ═══════════════════════════════════════════════════════════════════════ */
 :root {
   /* ── Canvas ───────────────────────────────────────────── */
-  --bg:       #F0EBE0;
-  --surface:  #EAE3D5;
-  --card:     #FFFDF8;
-  --card-2:   #F8F4EC;
+  --bg:       #FAF8F7;
+  --surface:  #F4F1EF;
+  --card:     #FFFFFF;
+  --card-2:   #F7F4F2;
 
-  /* ── Header ───────────────────────────────────────────── */
-  --header:   #1B2454;
-  --header-2: #28368A;
+  /* ── Header / sidebar / topbar chrome ─────────────────── */
+  --header:   #FFFFFF;
+  --header-2: #F4F1EF;
 
   /* ── Borders ──────────────────────────────────────────── */
-  --border:   rgba(32,36,63,0.10);
-  --border-n: rgba(32,36,63,0.07);
-  --border-2: rgba(32,36,63,0.14);
-  --border-3: rgba(32,36,63,0.22);
+  --border:   rgba(28,18,16,0.09);
+  --border-n: rgba(28,18,16,0.06);
+  --border-2: rgba(28,18,16,0.13);
+  --border-3: rgba(28,18,16,0.22);
 
   /* ── Text ─────────────────────────────────────────────── */
-  --text:     #20243F;
-  --text-2:   #4a4636;
-  --muted:    #7a7466;
-  --muted-2:  #9a948a;
+  --text:     #201512;
+  --text-2:   #574A44;
+  --muted:    #8A7B74;
+  --muted-2:  #AFA39D;
 
-  /* ── Gold — the accent ────────────────────────────────── */
-  --gold-1:      #F4DC95;
-  --gold-2:      #D8B45A;
-  --gold-3:      #B68A38;
-  --gold-border: rgba(182,138,56,0.35);
-  --gold-glow:   rgba(182,138,56,0.12);
+  /* ── Gold / Ember — the accent ────────────────────────── */
+  /* gold-2 is used as small/normal-size TEXT throughout (headings, nav,
+     icons), not just as a background — #E8462B only cleared 4.25:1 against
+     white/card, short of the 4.5:1 normal-text minimum. Darkened slightly;
+     still reads as the same vivid ember, now verified ≥4.7:1. */
+  --gold-1:      #FFB199;
+  --gold-2:      #D33C22;
+  --gold-3:      #B8301A;
+  --gold-border: rgba(232,70,43,0.35);
+  --gold-glow:   rgba(232,70,43,0.12);
 
   /* ── Priority (semantic) ──────────────────────────────── */
-  --urgent:   #9E2B3A;
-  --high:     #B5792A;
-  --medium:   #2E4A8F;
-  --low:      #2A7A4A;
-  --followup: #6B3FA0;
+  --urgent:   #C0281A;
+  --high:     #AD5A1C;
+  --medium:   #3B5BA6;
+  --low:      #2F7A52;
+  --followup: #7D4FA0;
+
+  /* ── Solid button fill — verified ≥4.5:1 with white text ── */
+  --gold-4:   #B8301A;
 }
 
 /* ─── Dark mode ─────────────────────────────────────────────────────── */
 [data-theme="dark"] {
-  --bg:       #0F1120;
-  --surface:  #161928;
-  --card:     #1C2038;
-  --card-2:   #222844;
-  --border:   rgba(255,255,255,0.07);
+  --bg:       #15100E;
+  --surface:  #1B1512;
+  --card:     #211A17;
+  --card-2:   #271F1B;
+  --header:   #1B1512;
+  --header-2: #211A17;
+  --border:   rgba(255,255,255,0.08);
   --border-n: rgba(255,255,255,0.05);
-  --border-2: rgba(255,255,255,0.10);
-  --border-3: rgba(255,255,255,0.15);
-  --text:     #EEE8DC;
-  --text-2:   #B8B0A0;
-  --muted:    #7A7466;
-  --muted-2:  #5A5450;
+  --border-2: rgba(255,255,255,0.12);
+  --border-3: rgba(255,255,255,0.18);
+  --text:     #F3EBE7;
+  --text-2:   #C9BAB2;
+  --muted:    #8F8079;
+  --muted-2:  #665A54;
+
+  --gold-1:      #FF7A5C;
+  --gold-2:      #FF5A3A;
+  --gold-3:      #FF8A6E;
+  --gold-border: rgba(255,90,58,0.42);
+  --gold-glow:   rgba(255,90,58,0.16);
+
+  --urgent:   #E8503A;
+  --high:     #E8933F;
+  --medium:   #6B8CD9;
+  --low:      #4FAE7C;
+  --followup: #A97BD1;
+
+  /* ── Solid button fill — verified ≥4.5:1 with white text ── */
+  --gold-4:   #C23D22;
+
   color-scheme: dark;
 }
 
@@ -72,7 +99,7 @@
 html { color-scheme: light; scroll-behavior: smooth; }
 
 body {
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
@@ -85,8 +112,8 @@ body {
 /* ─── Scrollbar ──────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(182,138,56,0.30); border-radius: 8px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(182,138,56,0.50); }
+::-webkit-scrollbar-thumb { background: rgba(232,70,43,0.30); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(232,70,43,0.50); }
 
 /* ─── Hide number spinners ───────────────────────────────────────────── */
 input[type="number"]::-webkit-inner-spin-button,
@@ -94,24 +121,8 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; marg
 input[type="number"] { -moz-appearance: textfield; }
 
 /* ─── Typography helpers ─────────────────────────────────────────────── */
-.font-serif  { font-family: Georgia, 'Times New Roman', serif; }
-.font-mono   { font-family: 'Courier New', monospace; }
-
-/* ─── Gold gradient text (shimmer) ──────────────────────────────────── */
-.gold-text-shimmer {
-  background: linear-gradient(135deg, var(--gold-1), var(--gold-2) 50%, var(--gold-3));
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-  animation: shimmer 5s linear infinite;
-}
-@keyframes shimmer {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
+.font-serif  { font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif; }
+.font-mono   { font-family: var(--font-geist-mono), 'Courier New', monospace; }
 
 /* ─── Stat tile ──────────────────────────────────────────────────────── */
 .stat-tile {
@@ -123,22 +134,21 @@ input[type="number"] { -moz-appearance: textfield; }
 }
 .stat-tile:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(182,138,56,0.14);
-  border-color: rgba(182,138,56,0.55);
+  box-shadow: 0 4px 14px rgba(232,70,43,0.14);
+  border-color: rgba(232,70,43,0.55);
 }
 
 /* ─── Task card ──────────────────────────────────────────────────────── */
 .task-card {
   background: var(--card);
-  border: 1px solid rgba(32,36,63,0.08);
-  border-left: none;
-  border-radius: 0 3px 3px 0;
-  box-shadow: 0 1px 2px rgba(32,36,63,0.04);
+  border: 1px solid rgba(32,21,18,0.08);
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(32,21,18,0.04);
   transition: transform 200ms ease, box-shadow 200ms ease;
 }
 .task-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 16px rgba(32,36,63,0.10);
+  box-shadow: 0 5px 16px rgba(32,21,18,0.10);
 }
 
 /* ─── Gold rule divider ──────────────────────────────────────────────── */
@@ -147,21 +157,25 @@ input[type="number"] { -moz-appearance: textfield; }
   background: linear-gradient(90deg, transparent, var(--gold-border) 20%, var(--gold-border) 80%, transparent);
 }
 
-/* ─── Primary gold button ────────────────────────────────────────────── */
+/* ─── Primary ember button ───────────────────────────────────────────── */
+/* Solid fill (not a gradient) so text contrast stays verified — a 3-stop
+   gradient across the gold-1→gold-3 range made #3A2A00 text fail contrast
+   at the darker end (~2.3:1 against gold-3). --gold-4 is tuned per-theme
+   to hold ≥4.5:1 against white. */
 .btn-gold {
-  background: linear-gradient(135deg, var(--gold-1), var(--gold-2) 50%, var(--gold-3));
-  color: #3A2A00;
+  background: var(--gold-4);
+  color: #FFFFFF;
   font-weight: 700;
   border: none;
   cursor: pointer;
   transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
 }
-.btn-gold:hover  { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(182,138,56,0.40); }
+.btn-gold:hover  { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(232,70,43,0.40); }
 .btn-gold:active { transform: translateY(0); box-shadow: none; }
 
 /* ─── Outline button ─────────────────────────────────────────────────── */
 .btn-outline {
-  border: 1px solid rgba(32,36,63,0.18);
+  border: 1px solid rgba(32,21,18,0.18);
   color: var(--text-2);
   background: transparent;
   cursor: pointer;
@@ -182,49 +196,30 @@ input[type="number"] { -moz-appearance: textfield; }
 /* ─── Board column ───────────────────────────────────────────────────── */
 .board-col {
   background: var(--card-2);
-  border: 1px solid rgba(182,138,56,0.18);
+  border: 1px solid rgba(232,70,43,0.18);
   border-radius: 4px;
 }
 
 /* ─── Priority badge hover ───────────────────────────────────────────── */
-.priority-hover-urgent:hover   { box-shadow: 0 5px 16px rgba(158,43,58,0.14); border-color: rgba(158,43,58,0.20) !important; }
-.priority-hover-high:hover     { box-shadow: 0 5px 16px rgba(181,121,42,0.14); border-color: rgba(181,121,42,0.20) !important; }
-.priority-hover-medium:hover   { box-shadow: 0 5px 16px rgba(46,74,143,0.14); border-color: rgba(46,74,143,0.20) !important; }
-.priority-hover-low:hover      { box-shadow: 0 5px 16px rgba(42,122,74,0.14); border-color: rgba(42,122,74,0.20) !important; }
-.priority-hover-followup:hover { box-shadow: 0 5px 16px rgba(107,63,160,0.14); border-color: rgba(107,63,160,0.20) !important; }
-
-/* ─── Nav pill (in header) ───────────────────────────────────────────── */
-.nav-pill {
-  border: 1px solid rgba(255,255,255,0.16);
-  border-radius: 99px;
-  color: rgba(255,255,255,0.65);
-  background: transparent;
-  cursor: pointer;
-  transition: background 150ms, border-color 150ms, color 150ms;
-}
-.nav-pill:hover {
-  background: rgba(255,255,255,0.10);
-  border-color: rgba(255,255,255,0.28);
-  color: rgba(255,255,255,0.90);
-}
-
-/* ─── Clock panel (in header) ───────────────────────────────────────── */
-.clock-panel {
-  background: rgba(255,255,255,0.07);
-  border: 1px solid var(--gold-border);
-  border-radius: 6px;
-}
+.priority-hover-urgent:hover   { box-shadow: 0 5px 16px rgba(192,40,26,0.14); border-color: rgba(192,40,26,0.20) !important; }
+.priority-hover-high:hover     { box-shadow: 0 5px 16px rgba(217,117,42,0.14); border-color: rgba(217,117,42,0.20) !important; }
+.priority-hover-medium:hover   { box-shadow: 0 5px 16px rgba(59,91,166,0.14); border-color: rgba(59,91,166,0.20) !important; }
+.priority-hover-low:hover      { box-shadow: 0 5px 16px rgba(47,122,82,0.14); border-color: rgba(47,122,82,0.20) !important; }
+.priority-hover-followup:hover { box-shadow: 0 5px 16px rgba(125,79,160,0.14); border-color: rgba(125,79,160,0.20) !important; }
 
 /* ─── Glass surface (modals) ─────────────────────────────────────────── */
 .glass {
-  background: rgba(255,253,248,0.95);
+  background: rgba(255,255,255,0.95);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   border: 1px solid var(--gold-border);
 }
+[data-theme="dark"] .glass {
+  background: rgba(33,26,23,0.95);
+}
 
-/* ─── Progress bar gold ──────────────────────────────────────────────── */
+/* ─── Progress bar gold (ember) ──────────────────────────────────────── */
 .progress-bar-gold {
   background: linear-gradient(90deg, var(--gold-1), var(--gold-2));
-  box-shadow: 0 0 8px rgba(182,138,56,0.35);
+  box-shadow: 0 0 8px rgba(232,70,43,0.35);
 }

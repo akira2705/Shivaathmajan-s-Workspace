@@ -50,8 +50,8 @@ export default function DailyBriefing({ tasks }: { tasks: Task[] }) {
           }}
         >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full mt-0.5"
-            style={{ background: "var(--header)", border: "1px solid rgba(182,138,56,0.35)" }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--gold-1)" strokeWidth="1.8">
+            style={{ background: "var(--gold-glow)", border: "1px solid rgba(184,48,26,0.35)" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--gold-2)" strokeWidth="1.8">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
             </svg>
           </div>

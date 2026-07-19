@@ -6,7 +6,7 @@ export default function Home() {
       className="min-h-screen flex flex-col items-center justify-center gap-6 px-6 text-center"
       style={{ background: "var(--bg)" }}
     >
-      <h1 className="font-serif italic font-extrabold" style={{ fontSize: "4rem", color: "var(--header)" }}>
+      <h1 className="font-serif font-extrabold tracking-tight" style={{ fontSize: "4rem", color: "var(--gold-2)" }}>
         TaskFlow
       </h1>
       <p className="font-mono text-sm uppercase tracking-[2px]" style={{ color: "var(--muted)" }}>

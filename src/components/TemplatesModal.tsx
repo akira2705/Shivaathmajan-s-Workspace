@@ -56,7 +56,7 @@ export default function TemplatesModal({ open, onClose, onApply, selectedTasks }
       {open && (
         <>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60]" style={{ background: "rgba(32,36,63,0.40)", backdropFilter: "blur(4px)" }}
+            className="fixed inset-0 z-[60]" style={{ background: "rgba(32,21,18,0.40)", backdropFilter: "blur(4px)" }}
             onClick={onClose} />
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -64,13 +64,13 @@ export default function TemplatesModal({ open, onClose, onApply, selectedTasks }
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ type: "spring", stiffness: 360, damping: 28 }}
             className="fixed z-[61] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(460px,92vw)] rounded overflow-hidden"
-            style={{ background: "var(--card)", border: "1px solid var(--gold-border)", boxShadow: "0 20px 60px rgba(32,36,63,0.20)", maxHeight: "80vh" }}
+            style={{ background: "var(--card)", border: "1px solid var(--gold-border)", boxShadow: "0 20px 60px rgba(32,21,18,0.20)", maxHeight: "80vh" }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4" style={{ background: "var(--header)", borderBottom: "1px solid rgba(182,138,56,0.25)" }}>
-              <h2 className="font-serif text-lg font-bold italic" style={{ color: "var(--gold-1)" }}>Task Templates</h2>
+            <div className="flex items-center justify-between px-5 py-4" style={{ background: "var(--header)", borderBottom: "1px solid rgba(184,48,26,0.25)" }}>
+              <h2 className="font-serif text-lg font-bold tracking-tight" style={{ color: "var(--gold-2)" }}>Task Templates</h2>
               <button onClick={onClose} className="h-7 w-7 flex items-center justify-center rounded font-mono text-xs"
-                style={{ border: "1px solid rgba(255,255,255,0.16)", color: "rgba(255,255,255,0.55)" }}>✕</button>
+                style={{ border: "1px solid var(--border)", color: "var(--muted)" }}>✕</button>
             </div>
 
             {/* Tabs */}
@@ -120,7 +120,7 @@ export default function TemplatesModal({ open, onClose, onApply, selectedTasks }
                         </button>
                         <button onClick={() => del(t.id)}
                           className="flex h-7 w-7 items-center justify-center rounded"
-                          style={{ border: "1px solid rgba(158,43,58,0.25)", color: "var(--urgent)", background: "rgba(158,43,58,0.05)" }}>
+                          style={{ border: "1px solid rgba(192,40,26,0.25)", color: "var(--urgent)", background: "rgba(192,40,26,0.05)" }}>
                           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12"/>
                           </svg>

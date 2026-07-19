@@ -148,12 +148,8 @@ export default function AiAssistant({
         className="fixed z-50 flex items-center justify-center rounded-full"
         style={{
           bottom: 88, right: 20, width: 52, height: 52,
-          background: open
-            ? "var(--header)"
-            : "linear-gradient(135deg, var(--gold-1), var(--gold-2) 50%, var(--gold-3))",
-          boxShadow: open
-            ? "0 4px 18px rgba(27,36,84,0.35)"
-            : "0 4px 18px rgba(182,138,56,0.40)",
+          background: "var(--gold-4)",
+          boxShadow: "0 4px 18px rgba(184,48,26,0.40)",
         }}
         aria-label="AI Assistant">
         <AnimatePresence mode="wait">
@@ -166,7 +162,7 @@ export default function AiAssistant({
           ) : (
             <motion.svg key="ai" initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.7, opacity: 0 }}
               transition={{ duration: 0.18 }}
-              width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(58,42,0,0.9)" strokeWidth="1.8">
+              width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z" />
             </motion.svg>
@@ -189,33 +185,33 @@ export default function AiAssistant({
               height: "min(540px, calc(100vh - 200px))",
               background: "var(--card)",
               border: "1px solid var(--gold-border)",
-              boxShadow: "0 20px 60px rgba(32,36,63,0.18), 0 0 0 1px rgba(182,138,56,0.10)",
+              boxShadow: "0 20px 60px rgba(32,21,18,0.18), 0 0 0 1px rgba(184,48,26,0.10)",
             }}>
 
             {/* Header */}
             <div className="flex items-center gap-3 px-4 py-3.5 shrink-0"
-              style={{ background: "var(--header)", borderBottom: "1px solid rgba(182,138,56,0.25)" }}>
+              style={{ background: "var(--header)", borderBottom: "1px solid rgba(184,48,26,0.25)" }}>
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-                style={{ background: "rgba(255,255,255,0.10)", border: "1px solid rgba(182,138,56,0.35)" }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gold-1)" strokeWidth="1.8">
+                style={{ background: "var(--gold-glow)", border: "1px solid rgba(184,48,26,0.35)" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gold-2)" strokeWidth="1.8">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z" />
                 </svg>
               </div>
               <div className="flex-1">
-                <p className="font-serif text-sm font-bold italic" style={{ color: "var(--gold-1)" }}>
+                <p className="font-serif text-sm font-bold tracking-tight" style={{ color: "var(--gold-2)" }}>
                   Assistant
                 </p>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#4ade80" }} />
-                  <p className="font-mono text-[9px] uppercase tracking-[1.2px]" style={{ color: "rgba(255,255,255,0.38)" }}>
+                  <p className="font-mono text-[9px] uppercase tracking-[1.2px]" style={{ color: "var(--muted)" }}>
                     {pending.length} pending · {context.urgentCount} urgent
                   </p>
                 </div>
               </div>
               <button onClick={() => setMessages([])}
                 className="font-mono text-[9px] uppercase tracking-[1px] px-2 py-1 rounded"
-                style={{ color: "rgba(255,255,255,0.30)", border: "1px solid rgba(255,255,255,0.10)" }}>
+                style={{ color: "var(--muted-2)", border: "1px solid var(--border-n)" }}>
                 Clear
               </button>
             </div>
@@ -228,7 +224,7 @@ export default function AiAssistant({
               {messages.length === 0 && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-4 pt-2">
                   <div>
-                    <p className="font-serif text-base font-bold italic" style={{ color: "var(--text)" }}>
+                    <p className="font-serif text-base font-bold tracking-tight" style={{ color: "var(--text)" }}>
                       Hey there.
                     </p>
                     <p className="font-mono text-[11px] mt-1 leading-relaxed" style={{ color: "var(--muted)" }}>
@@ -269,7 +265,7 @@ export default function AiAssistant({
                     {/* Assistant avatar */}
                     {m.role === "assistant" && (
                       <div className="flex-none w-6 h-6 rounded-full flex items-center justify-center mt-0.5"
-                        style={{ background: "var(--header)", border: "1px solid rgba(182,138,56,0.30)" }}>
+                        style={{ background: "var(--gold-glow)", border: "1px solid rgba(184,48,26,0.30)" }}>
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--gold-2)" strokeWidth="2">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
                         </svg>
@@ -278,10 +274,8 @@ export default function AiAssistant({
 
                     <div className="max-w-[82%] rounded px-3 py-2.5 text-[13px] leading-relaxed"
                       style={{
-                        background: m.role === "user"
-                          ? "linear-gradient(135deg, var(--header-2), var(--header))"
-                          : "var(--card-2)",
-                        color: m.role === "user" ? "rgba(255,255,255,0.92)" : "var(--text)",
+                        background: m.role === "user" ? "var(--gold-4)" : "var(--card-2)",
+                        color: m.role === "user" ? "#FFFFFF" : "var(--text)",
                         borderRadius: m.role === "user" ? "12px 12px 2px 12px" : "2px 12px 12px 12px",
                         border: m.role === "assistant" ? "1px solid var(--border-n)" : "none",
                       }}>
@@ -296,7 +290,7 @@ export default function AiAssistant({
                 <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                   className="flex items-center gap-2">
                   <div className="flex-none w-6 h-6 rounded-full flex items-center justify-center"
-                    style={{ background: "var(--header)", border: "1px solid rgba(182,138,56,0.30)" }}>
+                    style={{ background: "var(--gold-glow)", border: "1px solid rgba(184,48,26,0.30)" }}>
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--gold-2)" strokeWidth="2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
                     </svg>

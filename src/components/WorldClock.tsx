@@ -12,6 +12,41 @@ const PHASE_META: Record<Phase, { label: string; emoji: string; gradient: string
   night:     { label: "Night",     emoji: "🌙", gradient: "linear-gradient(135deg, #6366f1 0%, #312e81 100%)", glow: "rgba(99,102,241,0.16)" },
 };
 
+// Small inline-SVG glyphs standing in for the phase emoji (kept out of markup
+// per the no-emoji design rule) — the emoji field above is left untouched.
+function PhaseIcon({ phase }: { phase: Phase }) {
+  const common = { width: 20, height: 20, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  if (phase === "morning") {
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="14" r="4" />
+        <path d="M3 20h18M12 3v3M5.6 9.6l1.4 1.4M18.4 9.6 17 11" />
+      </svg>
+    );
+  }
+  if (phase === "afternoon") {
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="12" r="4.5" />
+        <path d="M12 2.5v2.5M12 19v2.5M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2.5 12H5M19 12h2.5M4.2 19.8 6 18M18 6l1.8-1.8" />
+      </svg>
+    );
+  }
+  if (phase === "evening") {
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="13" r="4" />
+        <path d="M3 20h18M12 3v3M5.6 8.6l1.4 1.4M18.4 8.6 17 10" />
+      </svg>
+    );
+  }
+  return (
+    <svg {...common}>
+      <path d="M20 14.5a8 8 0 1 1-9.5-10.8 6.5 6.5 0 0 0 9.5 10.8Z" />
+    </svg>
+  );
+}
+
 function getPhase(h: number): Phase {
   if (h >= 5  && h < 12) return "morning";
   if (h >= 12 && h < 17) return "afternoon";
@@ -38,6 +73,7 @@ export default function WorldClock() {
 
   const phase = getPhase(now.getHours());
   const meta  = PHASE_META[phase];
+  const phaseColor = meta.gradient.match(/#[0-9a-f]{6}/i)?.[0];
   const hh = String(now.getHours()).padStart(2, "0");
   const mm = String(now.getMinutes()).padStart(2, "0");
   const ss = String(now.getSeconds()).padStart(2, "0");
@@ -58,15 +94,16 @@ export default function WorldClock() {
             <motion.span key={ss} initial={{ opacity: 0.3 }} animate={{ opacity: 1 }} className="text-[var(--muted)]">:{ss}</motion.span>
           </span>
           <AnimatePresence mode="wait">
-            <motion.span key={phase} initial={{ opacity:0, y:6, scale:0.8 }} animate={{ opacity:1, y:0, scale:1 }} exit={{ opacity:0, y:-6, scale:0.8 }} transition={{ duration:0.4 }} className="text-2xl">
-              {meta.emoji}
+            <motion.span key={phase} initial={{ opacity:0, y:6, scale:0.8 }} animate={{ opacity:1, y:0, scale:1 }} exit={{ opacity:0, y:-6, scale:0.8 }} transition={{ duration:0.4 }}
+              style={{ color: phaseColor }}>
+              <PhaseIcon phase={phase} />
             </motion.span>
           </AnimatePresence>
         </div>
         <AnimatePresence mode="wait">
           <motion.div key={phase} initial={{ opacity:0, x:-8 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0, x:8 }} transition={{ duration:0.35 }}
             className="mt-1 font-mono text-[11px] uppercase tracking-[2px]"
-            style={{ color: meta.gradient.match(/#[0-9a-f]{6}/i)?.[0] }}>
+            style={{ color: phaseColor }}>
             Good {meta.label}
           </motion.div>
         </AnimatePresence>
