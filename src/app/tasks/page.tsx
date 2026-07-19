@@ -19,6 +19,7 @@ import { useApiKey } from "@/lib/useApiKey";
 import { fetchTasks, createTask, updateTask, deleteTaskApi, bulkActionApi } from "@/lib/api";
 import { findSimilarTask, isSimilarTitle } from "@/lib/fuzzy";
 import { parseNaturalDate } from "@/lib/dateParse";
+import { usePushSubscription } from "@/lib/usePushSubscription";
 import {
   PRIORITY_META,
   PRIORITY_ORDER,
@@ -100,6 +101,7 @@ export default function TasksPage() {
   const [recurringSuggestion, setRecurringSuggestion] = useState<{ id: string; title: string; count: number; pattern: Recurrence } | null>(null);
   const isMobile = useIsMobile();
   const { apiKey, setApiKey } = useApiKey();
+  const { subscribed: pushSubscribed } = usePushSubscription();
 
   const undoTimer      = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -136,6 +138,37 @@ export default function TasksPage() {
   useEffect(() => {
     loadTasks();
   }, [loadTasks]);
+
+  // ─── Push snapshot to server (Redis) for the daily-briefing cron ─────────
+  // The Vercel Cron job that delivers the push notification has no access
+  // to this browser's localStorage, so we mirror a compact, privacy-minimal
+  // snapshot (title/priority/done/dueDate only) to the server whenever the
+  // task list actually changes — throttled to at most once per ~30s so
+  // rapid edits don't spam the API. Gated on `pushSubscribed`: Settings
+  // promises "nothing is sent unless you opt in" — this must actually be
+  // true, not just true of the push delivery step.
+  const snapshotSerializedRef = useRef<string>("");
+  const snapshotLastSentAtRef = useRef<number>(0);
+  const snapshotTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!pushSubscribed) return;
+    const compact = tasks.map((t) => ({ title: t.title, priority: t.priority, done: t.done, dueDate: t.dueDate }));
+    const serialized = JSON.stringify(compact);
+    if (serialized === snapshotSerializedRef.current) return;
+
+    if (snapshotTimerRef.current) clearTimeout(snapshotTimerRef.current);
+    const wait = Math.max(0, 30_000 - (Date.now() - snapshotLastSentAtRef.current));
+    snapshotTimerRef.current = setTimeout(() => {
+      snapshotSerializedRef.current = serialized;
+      snapshotLastSentAtRef.current = Date.now();
+      fetch("/api/tasks/snapshot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tasks: compact }),
+      }).catch(() => { /* best-effort — snapshot sync isn't user-facing */ });
+    }, wait);
+    return () => { if (snapshotTimerRef.current) clearTimeout(snapshotTimerRef.current); };
+  }, [tasks, pushSubscribed]);
 
   // ─── Speech-to-text (native browser SpeechRecognition only — no server
   //     transcription fallback since there's no backend in this demo) ──────

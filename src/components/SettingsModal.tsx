@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { clearAllLocalData } from "@/lib/api";
+import { usePushSubscription } from "@/lib/usePushSubscription";
 
 // Settings modal for the standalone demo. The multi-user "Supervisors" admin
 // panel from the reference app was backend-specific and has been dropped,
@@ -21,6 +22,7 @@ export default function SettingsModal({
   onSave: (key: string) => void;
 }) {
   const [draft, setDraft] = useState(apiKey);
+  const push = usePushSubscription();
   return (
     <AnimatePresence>
       {open && (
@@ -79,6 +81,58 @@ export default function SettingsModal({
                   Save
                 </button>
               </div>
+            </div>
+
+            <div className="mt-6 space-y-2">
+              <p className="font-mono text-[10px] uppercase tracking-[1.2px]" style={{ color: "var(--gold-3)" }}>
+                Daily Briefing Push Notifications
+              </p>
+
+              {!push.supported ? (
+                <p className="font-mono text-[10px]" style={{ color: "var(--muted)" }}>
+                  Not supported in this browser (needs a modern browser with service worker
+                  and push support, served over HTTPS).
+                </p>
+              ) : (
+                <>
+                  <p className="font-mono text-[10px]" style={{ color: "var(--muted)" }}>
+                    {push.subscribed
+                      ? "Enabled — this browser will get a real push notification with your morning briefing, even if TaskFlow isn't open."
+                      : "Get your morning briefing delivered as a real browser notification once a day, even if no tab is open."}
+                  </p>
+                  {push.permission === "denied" && (
+                    <p className="font-mono text-[10px]" style={{ color: "var(--urgent)" }}>
+                      Notifications are blocked for this site — allow them in your browser&apos;s
+                      site settings, then try again.
+                    </p>
+                  )}
+                  {push.error && (
+                    <p className="font-mono text-[10px]" style={{ color: "var(--urgent)" }}>
+                      {push.error}
+                    </p>
+                  )}
+                  <div className="flex justify-end gap-2">
+                    {push.subscribed ? (
+                      <button
+                        onClick={push.unsubscribe}
+                        disabled={push.busy}
+                        className="rounded border px-4 py-1.5 font-mono text-[10px] uppercase tracking-wide disabled:opacity-50"
+                        style={{ borderColor: "var(--urgent)", color: "var(--urgent)" }}
+                      >
+                        {push.busy ? "Working…" : "Disable"}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={push.subscribe}
+                        disabled={push.busy || push.permission === "denied"}
+                        className="btn-gold rounded px-4 py-1.5 font-mono text-[10px] uppercase tracking-[1.2px] disabled:opacity-50"
+                      >
+                        {push.busy ? "Working…" : "Enable"}
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="mt-6 flex justify-between gap-2">
