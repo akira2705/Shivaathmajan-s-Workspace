@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { todayStr } from "@/lib/date";
 import { groqChat, GroqError } from "@/lib/groq";
-
-const PRIORITIES = ["urgent", "high", "medium", "low", "followup"];
+import { PRIORITIES } from "@/lib/ai-skill";
 
 export async function POST(req: NextRequest) {
   const { text, apiKey } = await req.json();

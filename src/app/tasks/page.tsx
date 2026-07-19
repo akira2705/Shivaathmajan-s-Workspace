@@ -1027,10 +1027,18 @@ export default function TasksPage() {
       </div>
 
       {/* ── AI Assistant ──────────────────────────────────────────────────── */}
-      <AiAssistant apiKey={apiKey} tasks={tasks} onTaskCreated={(task) => {
-        setPending(task.id, task);
-        setTasks(p => [task, ...p]);
-      }} />
+      <AiAssistant
+        apiKey={apiKey}
+        tasks={tasks}
+        onTaskCreated={(task) => {
+          setPending(task.id, task);
+          setTasks(p => [task, ...p]);
+        }}
+        onCompleteTask={(id) => { const t = tasks.find(x => x.id === id); if (t && !t.done) toggle(id); }}
+        onReopenTask={(id) => { const t = tasks.find(x => x.id === id); if (t && t.done) toggle(id); }}
+        onDeleteTask={deleteTask}
+        onSetPriority={changePriority}
+      />
 
       {/* ── Feature modals & overlays ─────────────────────────────────────── */}
       <FocusTimer taskTitle={focusTask} onClose={() => setFocusTask(null)} />

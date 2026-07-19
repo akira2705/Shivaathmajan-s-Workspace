@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Task } from "@/lib/mockData";
+import { Priority, Task } from "@/lib/mockData";
 import { createTask } from "@/lib/api";
 
 interface Message {
@@ -13,18 +13,41 @@ interface Message {
 const QUICK_PROMPTS = [
   "What should I focus on right now?",
   "Any urgent tasks I'm missing?",
-  "How's my day looking?",
+  "Mark the invoice call done",
   "Add task: follow up on payment",
 ];
+
+// ─── Action-tag protocol (kept in sync with src/lib/ai-skill.ts) ──────────
+const ACTION_TAGS = [
+  { name: "ADD_TASK",     re: /\[ADD_TASK:(\{.*?\})\]/g },
+  { name: "COMPLETE_TASK",re: /\[COMPLETE_TASK:(\{.*?\})\]/g },
+  { name: "REOPEN_TASK",  re: /\[REOPEN_TASK:(\{.*?\})\]/g },
+  { name: "DELETE_TASK",  re: /\[DELETE_TASK:(\{.*?\})\]/g },
+  { name: "SET_PRIORITY", re: /\[SET_PRIORITY:(\{.*?\})\]/g },
+] as const;
+
+function findByMatch(tasks: Task[], match: string): Task | undefined {
+  const needle = (match ?? "").toLowerCase().trim();
+  if (!needle) return undefined;
+  return tasks.find(t => t.title.toLowerCase().includes(needle));
+}
 
 export default function AiAssistant({
   apiKey,
   tasks,
   onTaskCreated,
+  onCompleteTask,
+  onReopenTask,
+  onDeleteTask,
+  onSetPriority,
 }: {
   apiKey: string;
   tasks: Task[];
   onTaskCreated: (task: Task) => void;
+  onCompleteTask?: (id: string) => void;
+  onReopenTask?: (id: string) => void;
+  onDeleteTask?: (id: string) => void;
+  onSetPriority?: (id: string, priority: Priority) => void;
 }) {
   const [open, setOpen]         = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -76,20 +99,36 @@ export default function AiAssistant({
       const data  = await res.json();
       const reply: string = data.reply ?? data.error ?? "Something went wrong.";
 
-      const taskMatch = reply.match(/\[ADD_TASK:(\{.*?\})\]/);
-      if (taskMatch) {
-        try {
-          const taskData = JSON.parse(taskMatch[1]);
-          const saved    = await createTask({ title: taskData.title, priority: taskData.priority || "medium", tags: [] });
-          onTaskCreated(saved);
-          const clean = reply.replace(/\[ADD_TASK:.*?\]/g, "").trim();
-          setMessages(prev => [...prev, { role: "assistant", content: clean }]);
-        } catch {
-          setMessages(prev => [...prev, { role: "assistant", content: reply.replace(/\[ADD_TASK:.*?\]/g, "").trim() }]);
+      let clean = reply;
+      let anyAction = false;
+
+      for (const { name, re } of ACTION_TAGS) {
+        for (const m of Array.from(reply.matchAll(re))) {
+          anyAction = true;
+          try {
+            const payload = JSON.parse(m[1]);
+            if (name === "ADD_TASK") {
+              const saved = await createTask({ title: payload.title, priority: payload.priority || "medium", tags: [] });
+              onTaskCreated(saved);
+            } else if (name === "COMPLETE_TASK") {
+              const t = findByMatch(tasks, payload.match);
+              if (t) onCompleteTask?.(t.id);
+            } else if (name === "REOPEN_TASK") {
+              const t = findByMatch(tasks, payload.match);
+              if (t) onReopenTask?.(t.id);
+            } else if (name === "DELETE_TASK") {
+              const t = findByMatch(tasks, payload.match);
+              if (t) onDeleteTask?.(t.id);
+            } else if (name === "SET_PRIORITY") {
+              const t = findByMatch(tasks, payload.match);
+              if (t && payload.priority) onSetPriority?.(t.id, payload.priority);
+            }
+          } catch { /* malformed action payload — drop the tag, keep the reply text */ }
         }
-      } else {
-        setMessages(prev => [...prev, { role: "assistant", content: reply }]);
+        clean = clean.replace(re, "").trim();
       }
+
+      setMessages(prev => [...prev, { role: "assistant", content: anyAction ? clean : reply }]);
     } catch {
       setMessages(prev => [...prev, { role: "assistant", content: "Can't reach AI right now. Check your connection." }]);
     } finally {
