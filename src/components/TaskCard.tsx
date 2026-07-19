@@ -15,6 +15,7 @@ export default function TaskCard({
   bulkMode,
   selected,
   onSelect,
+  apiKey,
 }: {
   task: Task;
   onToggle: (id: string) => void;
@@ -26,6 +27,7 @@ export default function TaskCard({
   bulkMode?: boolean;
   selected?: boolean;
   onSelect?: (id: string) => void;
+  apiKey?: string;
 }) {
   const meta = PRIORITY_META[task.priority];
   const [editing, setEditing]       = useState(false);
@@ -34,6 +36,7 @@ export default function TaskCard({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [subtasksOpen, setSubtasksOpen] = useState(false);
   const [newSub, setNewSub]         = useState("");
+  const [decomposing, setDecomposing] = useState(false);
 
   const subtasks: SubTask[] = task.subtasks ?? [];
   const subDone = subtasks.filter(s => s.done).length;
@@ -71,6 +74,25 @@ export default function TaskCard({
 
   function deleteSubtask(subId: string) {
     onUpdateSubtasks?.(task.id, subtasks.filter(s => s.id !== subId));
+  }
+
+  async function decomposeTask() {
+    if (decomposing) return;
+    setDecomposing(true);
+    try {
+      const res = await fetch("/api/ai/decompose", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: task.title, apiKey }),
+      });
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.subtasks) && data.subtasks.length > 0) {
+        const added: SubTask[] = data.subtasks.map((title: string) => ({ id: crypto.randomUUID(), title, done: false }));
+        onUpdateSubtasks?.(task.id, [...subtasks, ...added]);
+        setSubtasksOpen(true);
+      }
+    } catch { /* silent — same soft-fail pattern as other AI affordances */ }
+    finally { setDecomposing(false); }
   }
 
   const handleCardClick = () => {
@@ -306,6 +328,23 @@ export default function TaskCard({
                 >
                   {subtasks.length > 0 ? `${subDone}/${subtasks.length} subtasks` : "+ subtask"}
                 </button>
+              )}
+
+              {/* AI split into subtasks */}
+              {onUpdateSubtasks && !task.done && (
+                <motion.button
+                  onClick={(e) => { e.stopPropagation(); decomposeTask(); }}
+                  whileTap={{ scale: 0.92 }}
+                  disabled={decomposing}
+                  className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-[1px] rounded px-2 py-0.5 transition-opacity hover:opacity-75 disabled:opacity-50"
+                  style={{ background: "rgba(184,48,26,0.06)", color: "var(--gold-3)", border: "1px solid rgba(184,48,26,0.20)" }}
+                  title="Split into subtasks with AI"
+                >
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+                  </svg>
+                  {decomposing ? "Splitting…" : "Split"}
+                </motion.button>
               )}
             </div>
 

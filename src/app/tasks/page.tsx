@@ -17,6 +17,8 @@ import AiAssistant from "@/components/AiAssistant";
 import { useIsMobile } from "@/lib/useIsMobile";
 import { useApiKey } from "@/lib/useApiKey";
 import { fetchTasks, createTask, updateTask, deleteTaskApi, bulkActionApi } from "@/lib/api";
+import { findSimilarTask, isSimilarTitle } from "@/lib/fuzzy";
+import { parseNaturalDate } from "@/lib/dateParse";
 import {
   PRIORITY_META,
   PRIORITY_ORDER,
@@ -41,9 +43,26 @@ const FILTERS: { key: FilterMode; label: string }[] = [
 ];
 
 const RECURRENCE_OPTIONS: { key: Recurrence; label: string }[] = [
-  { key: "none",   label: "One-time" },
-  { key: "daily",  label: "↻ Daily" },
-  { key: "weekly", label: "↻ Weekly" },
+  { key: "none",    label: "One-time" },
+  { key: "daily",   label: "↻ Daily" },
+  { key: "weekly",  label: "↻ Weekly" },
+  { key: "monthly", label: "↻ Monthly" },
+];
+
+// Quick-date shortcuts for the due-date field (feature: natural-language
+// dates without a native <input type="date"> accepting free text).
+const QUICK_DATE_OPTIONS: { value: string; label: string }[] = [
+  { value: "today",     label: "Today" },
+  { value: "tomorrow",  label: "Tomorrow" },
+  { value: "monday",    label: "Next Mon" },
+  { value: "tuesday",   label: "Next Tue" },
+  { value: "wednesday", label: "Next Wed" },
+  { value: "thursday",  label: "Next Thu" },
+  { value: "friday",    label: "Next Fri" },
+  { value: "saturday",  label: "Next Sat" },
+  { value: "sunday",    label: "Next Sun" },
+  { value: "in 3 days", label: "In 3 days" },
+  { value: "in 7 days", label: "In 7 days" },
 ];
 
 export default function TasksPage() {
@@ -77,6 +96,8 @@ export default function TasksPage() {
   const [aiError, setAiError]                 = useState<string | null>(null);
   const [summaryOpen, setSummaryOpen]         = useState(false);
   const [summary, setSummary]                 = useState<string | null>(null);
+  const [dupWarning, setDupWarning]           = useState<string | null>(null);
+  const [recurringSuggestion, setRecurringSuggestion] = useState<{ id: string; title: string; count: number; pattern: Recurrence } | null>(null);
   const isMobile = useIsMobile();
   const { apiKey, setApiKey } = useApiKey();
 
@@ -85,6 +106,9 @@ export default function TasksPage() {
   const silenceTimer   = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef       = useRef<HTMLDivElement | null>(null);
   const groupRefs      = useRef<Partial<Record<Priority, HTMLDivElement | null>>>({});
+  const dupWarningTimer       = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const recurringSuggestionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const aiCallTimestamps      = useRef<number[]>([]); // rolling window for the soft AI rate-limit
 
   const pendingRef = useRef<Map<string, { task: Task | null; expires: number }>>(new Map());
   const setPending = useCallback((id: string, task: Task | null, ms = 4000) => {
@@ -195,12 +219,54 @@ export default function TasksPage() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
+  // ─── Recurring-pattern detection ──────────────────────────────────────────
+  // Cheap client-side heuristic (no AI call): if a one-off task's title
+  // closely matches ≥2 archived tasks, and their due dates are roughly a
+  // week or month apart, suggest turning it into a recurring task.
+  function detectRecurringPattern(task: Task, archived: Task[]): { count: number; pattern: Recurrence } | null {
+    if (task.recurring && task.recurring !== "none") return null;
+    const matches = archived.filter((a) => isSimilarTitle(task.title, a.title));
+    if (matches.length < 2) return null;
+
+    const dates = [task.dueDate, ...matches.map((m) => m.dueDate)]
+      .filter((d): d is string => Boolean(d))
+      .sort();
+    let pattern: Recurrence = "weekly";
+    if (dates.length >= 2) {
+      const deltas: number[] = [];
+      for (let i = 1; i < dates.length; i++) {
+        deltas.push(Math.round((new Date(dates[i]).getTime() - new Date(dates[i - 1]).getTime()) / 86_400_000));
+      }
+      const avg = deltas.reduce((s, d) => s + d, 0) / deltas.length;
+      pattern = avg >= 20 ? "monthly" : "weekly";
+    }
+    return { count: matches.length + 1, pattern };
+  }
+
   // ─── Mutations ───────────────────────────────────────────────────────────────
   async function toggle(id: string) {
     const task = tasks.find((t) => t.id === id); if (!task) return;
     const updated = { ...task, done: !task.done };
     setPending(id, updated); setTasks((p) => p.map((t) => t.id === id ? updated : t));
     await updateTask(id, { done: updated.done });
+
+    if (updated.done) {
+      const suggestion = detectRecurringPattern(updated, archive);
+      if (suggestion) {
+        setRecurringSuggestion({ id, title: task.title, count: suggestion.count, pattern: suggestion.pattern });
+        if (recurringSuggestionTimer.current) clearTimeout(recurringSuggestionTimer.current);
+        recurringSuggestionTimer.current = setTimeout(() => setRecurringSuggestion(null), 8000);
+      }
+    }
+  }
+
+  async function acceptRecurringSuggestion() {
+    if (!recurringSuggestion) return;
+    const { id, pattern } = recurringSuggestion;
+    setTasks((p) => p.map((t) => (t.id === id ? { ...t, recurring: pattern } : t)));
+    await updateTask(id, { recurring: pattern });
+    setRecurringSuggestion(null);
+    if (recurringSuggestionTimer.current) clearTimeout(recurringSuggestionTimer.current);
   }
 
   async function deleteTask(id: string) {
@@ -257,6 +323,18 @@ export default function TasksPage() {
     setSelectedIds(new Set()); setBulkMode(false);
   }
 
+  // Same shape as bulkAction above, but driven by the chat assistant's
+  // BULK_ACTION tag rather than the selection-mode toolbar — so it doesn't
+  // touch selectedIds/bulkMode. "reopen" maps to bulkActionApi's "undone".
+  async function bulkActionFromAi(ids: string[], action: "complete" | "delete" | "reopen") {
+    if (!ids.length) return;
+    const apiAction = action === "complete" ? "done" : action === "reopen" ? "undone" : "delete";
+    await bulkActionApi(ids, apiAction);
+    if (apiAction === "delete") { ids.forEach(id => setPending(id, null)); setTasks(p => p.filter(t => !ids.includes(t.id))); }
+    if (apiAction === "done")   { setTasks(p => p.map(t => ids.includes(t.id) ? { ...t, done: true } : t)); }
+    if (apiAction === "undone") { setTasks(p => p.map(t => ids.includes(t.id) ? { ...t, done: false } : t)); }
+  }
+
   function printPage() { window.print(); }
 
   async function clearCompleted() {
@@ -270,6 +348,16 @@ export default function TasksPage() {
 
   async function addTask(overrides?: Partial<Task>) {
     const title = (overrides?.title ?? draft).trim(); if (!title) return;
+
+    // Duplicate-task detection — cheap client-side fuzzy match against
+    // other undone tasks. Doesn't block the add, just warns.
+    const dup = findSimilarTask(title, tasks.filter((t) => !t.done));
+    if (dup) {
+      setDupWarning(dup.title);
+      if (dupWarningTimer.current) clearTimeout(dupWarningTimer.current);
+      dupWarningTimer.current = setTimeout(() => setDupWarning(null), 4000);
+    }
+
     const payload = { title, priority: overrides?.priority ?? draftPriority, tags: overrides?.tags ?? [], dueTime: overrides?.dueTime ?? (draftDueTime || undefined), dueDate: overrides?.dueDate ?? (draftDueDate || undefined), recurring: overrides?.recurring ?? draftRecurring };
     setDraft(""); setDraftDueTime(""); setDraftDueDate(""); setDraftRecurring("none");
     try {
@@ -310,6 +398,14 @@ export default function TasksPage() {
     if (!apiKey || draft.length < 10 || draft === lastSuggested.current) { setAiSuggestion(null); return; }
     if (suggestTimer.current) clearTimeout(suggestTimer.current);
     suggestTimer.current = setTimeout(async () => {
+      // Soft self-imposed rate-limit: skip silently if we've already made
+      // more than 8 AI-suggest calls in the last 60s (fast typists / no
+      // debounce edge cases shouldn't burn through a Groq quota).
+      const now = Date.now();
+      aiCallTimestamps.current = aiCallTimestamps.current.filter((t) => now - t < 60_000);
+      if (aiCallTimestamps.current.length > 8) return;
+      aiCallTimestamps.current.push(now);
+
       try {
         const res = await fetch("/api/ai/parse", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: draft, apiKey }) });
         const data = await res.json();
@@ -481,6 +577,23 @@ export default function TasksPage() {
                 </svg>
                 <input type="date" value={draftDueDate} onChange={(e) => setDraftDueDate(e.target.value)} className="bg-transparent outline-none text-[10px]" style={{ color: "var(--low)", colorScheme: "light" }} />
                 {draftDueDate && <button onClick={() => setDraftDueDate("")} className="ml-1 text-[9px]" style={{ color: "var(--muted)" }}>✕</button>}
+                {/* Quick date — native date inputs can't parse free text, so
+                    "today/tomorrow/next friday/in N days" live here instead. */}
+                <select
+                  value=""
+                  onChange={(e) => {
+                    const parsed = parseNaturalDate(e.target.value);
+                    if (parsed) setDraftDueDate(parsed);
+                  }}
+                  className="bg-transparent outline-none text-[9px] uppercase tracking-wide ml-1"
+                  style={{ color: "var(--muted)" }}
+                  title="Quick date"
+                >
+                  <option value="" style={{ background: "#FFFFFF", color: "#201512" }}>Quick…</option>
+                  {QUICK_DATE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value} style={{ background: "#FFFFFF", color: "#201512" }}>{o.label}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Recurrence */}
@@ -539,6 +652,21 @@ export default function TasksPage() {
                   </button>
                   {aiSuggestion.tags.length > 0 && <span style={{ color: "var(--muted)" }}>{aiSuggestion.tags.join(", ")}</span>}
                   <button onClick={() => setAiSuggestion(null)} className="text-[9px]" style={{ color: "var(--muted)" }}>✕</button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Duplicate-task warning — same visual language as the undo
+                toast (rounded card, gold border), dismissible, auto-clears. */}
+            <AnimatePresence>
+              {dupWarning && (
+                <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                  className="flex items-center gap-3 mt-2 ml-4 rounded px-3 py-1.5"
+                  style={{ background: "var(--card)", border: "1px solid var(--gold-border)" }}>
+                  <span className="font-mono text-[10px]" style={{ color: "var(--text-2)" }}>
+                    Similar to an existing task: &ldquo;{dupWarning.slice(0, 48)}{dupWarning.length > 48 ? "…" : ""}&rdquo;
+                  </span>
+                  <button onClick={() => setDupWarning(null)} className="text-[9px]" style={{ color: "var(--muted)" }}>✕</button>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -736,7 +864,8 @@ export default function TasksPage() {
                                 <TaskCard key={task.id} task={task} onToggle={toggle} onDelete={deleteTask}
                                   onChangePriority={changePriority} onRename={renameTask}
                                   onUpdateSubtasks={updateSubtasks} onFocus={t => setFocusTask(t)}
-                                  bulkMode={bulkMode} selected={selectedIds.has(task.id)} onSelect={toggleSelect} />
+                                  bulkMode={bulkMode} selected={selectedIds.has(task.id)} onSelect={toggleSelect}
+                                  apiKey={apiKey} />
                               ))}
                             </AnimatePresence>
                           </div>
@@ -768,7 +897,8 @@ export default function TasksPage() {
                                 <TaskCard key={task.id} task={task} onToggle={toggle} onDelete={deleteTask}
                                   onChangePriority={changePriority} onRename={renameTask}
                                   onUpdateSubtasks={updateSubtasks} onFocus={t => setFocusTask(t)}
-                                  bulkMode={bulkMode} selected={selectedIds.has(task.id)} onSelect={toggleSelect} />
+                                  bulkMode={bulkMode} selected={selectedIds.has(task.id)} onSelect={toggleSelect}
+                                  apiKey={apiKey} />
                               ))}
                             </AnimatePresence>
                           </div>
@@ -943,6 +1073,27 @@ export default function TasksPage() {
           )}
         </AnimatePresence>
 
+        {/* ── Recurring-pattern suggestion toast ───────────────────────────── */}
+        <AnimatePresence>
+          {recurringSuggestion && (
+            <motion.div
+              initial={{ opacity: 0, y: 40, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 30, scale: 0.92 }}
+              transition={{ type: "spring", stiffness: 320, damping: 28 }}
+              className="fixed z-50 flex -translate-x-1/2 items-center gap-4 rounded px-5 py-3"
+              style={{ bottom: 96, left: "50%", background: "var(--card)", border: "1px solid var(--gold-border)", boxShadow: "0 8px 30px rgba(32,21,18,0.16)" }}>
+              <span className="text-sm font-mono" style={{ color: "var(--text-2)" }}>
+                You&rsquo;ve done &ldquo;{recurringSuggestion.title.slice(0, 28)}{recurringSuggestion.title.length > 28 ? "…" : ""}&rdquo; {recurringSuggestion.count} times — make it {recurringSuggestion.pattern}?
+              </span>
+              <button onClick={acceptRecurringSuggestion} className="btn-gold rounded px-3 py-1.5 font-mono text-[10px] uppercase tracking-[1.2px] shrink-0">
+                Make {recurringSuggestion.pattern}
+              </button>
+              <button onClick={() => setRecurringSuggestion(null)} className="text-[9px] shrink-0" style={{ color: "var(--muted)" }}>✕</button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
       {/* ── AI Assistant ──────────────────────────────────────────────────── */}
       <AiAssistant
         apiKey={apiKey}
@@ -955,6 +1106,7 @@ export default function TasksPage() {
         onReopenTask={(id) => { const t = tasks.find(x => x.id === id); if (t && t.done) toggle(id); }}
         onDeleteTask={deleteTask}
         onSetPriority={changePriority}
+        onBulkAction={bulkActionFromAi}
       />
 
       {/* ── Feature modals & overlays ─────────────────────────────────────── */}

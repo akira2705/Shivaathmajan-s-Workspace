@@ -4,10 +4,19 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Priority, Task } from "@/lib/mockData";
 import { createTask } from "@/lib/api";
+import { Expense, ExpenseCategory, EXPENSE_CATEGORIES } from "@/lib/expenseData";
+import { createExpense } from "@/lib/expenseApi";
+import { todayStr } from "@/lib/date";
+
+interface PendingBulkDelete {
+  ids: string[];
+  summary: string; // e.g. "urgent: none, high: 2, medium: 1, low: none, followup: none"
+}
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  pendingBulkDelete?: PendingBulkDelete;
 }
 
 const QUICK_PROMPTS = [
@@ -24,6 +33,9 @@ const ACTION_TAGS = [
   { name: "REOPEN_TASK",  re: /\[REOPEN_TASK:(\{.*?\})\]/g },
   { name: "DELETE_TASK",  re: /\[DELETE_TASK:(\{.*?\})\]/g },
   { name: "SET_PRIORITY", re: /\[SET_PRIORITY:(\{.*?\})\]/g },
+  { name: "BULK_ACTION",  re: /\[BULK_ACTION:(\{.*?\})\]/g },
+  { name: "ADD_EXPENSE",  re: /\[ADD_EXPENSE:(\{.*?\})\]/g },
+  { name: "LINK_TASK",    re: /\[LINK_TASK:(\{.*?\})\]/g },
 ] as const;
 
 function findByMatch(tasks: Task[], match: string): Task | undefined {
@@ -32,22 +44,58 @@ function findByMatch(tasks: Task[], match: string): Task | undefined {
   return tasks.find(t => t.title.toLowerCase().includes(needle));
 }
 
+function findExpenseByMatch(expenses: Expense[], match: string): Expense | undefined {
+  const needle = (match ?? "").toLowerCase().trim();
+  if (!needle) return undefined;
+  return expenses.find(e => e.description.toLowerCase().includes(needle));
+}
+
+const PRIORITY_KEYS: Priority[] = ["urgent", "high", "medium", "low", "followup"];
+
+// Filters the current task list by a BULK_ACTION payload's filter object.
+// Every provided field is AND-ed together.
+function filterTasksForBulk(
+  tasks: Task[],
+  filter: { priority?: Priority; done?: boolean; overdue?: boolean } | undefined
+): Task[] {
+  const f = filter ?? {};
+  const today = todayStr();
+  return tasks.filter(t => {
+    if (f.priority && t.priority !== f.priority) return false;
+    if (typeof f.done === "boolean" && t.done !== f.done) return false;
+    if (f.overdue && !(t.dueDate && t.dueDate < today && !t.done)) return false;
+    return true;
+  });
+}
+
+function summarizeByPriority(matched: Task[]): string {
+  const counts: Partial<Record<Priority, number>> = {};
+  for (const t of matched) counts[t.priority] = (counts[t.priority] ?? 0) + 1;
+  return PRIORITY_KEYS.map(p => `${p}: ${counts[p] ?? "none"}`).join(", ");
+}
+
 export default function AiAssistant({
   apiKey,
   tasks,
+  expenses,
   onTaskCreated,
   onCompleteTask,
   onReopenTask,
   onDeleteTask,
   onSetPriority,
+  onBulkAction,
+  onExpenseCreated,
 }: {
   apiKey: string;
   tasks: Task[];
+  expenses?: Expense[];
   onTaskCreated: (task: Task) => void;
   onCompleteTask?: (id: string) => void;
   onReopenTask?: (id: string) => void;
   onDeleteTask?: (id: string) => void;
   onSetPriority?: (id: string, priority: Priority) => void;
+  onBulkAction?: (ids: string[], action: "complete" | "delete" | "reopen") => void;
+  onExpenseCreated?: (expense: Expense) => void;
 }) {
   const [open, setOpen]         = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -72,6 +120,7 @@ export default function AiAssistant({
   }, [open]);
 
   const pending = tasks.filter(t => !t.done);
+  const monthPrefix = todayStr().slice(0, 7);
   const context = {
     pendingCount:  pending.length,
     urgentCount:   pending.filter(t => t.priority === "urgent").length,
@@ -79,6 +128,12 @@ export default function AiAssistant({
     taskSummary:   pending.slice(0, 15).map(t =>
       `- [${t.priority}] ${t.title}${t.dueDate ? ` (due ${t.dueDate})` : ""}${t.dueTime ? ` at ${t.dueTime}` : ""}`
     ).join("\n"),
+    ...(expenses ? {
+      expenseTotalMonth: expenses.filter(e => e.date.startsWith(monthPrefix)).reduce((s, e) => s + e.amount, 0),
+      expenseSummary: expenses.slice(0, 10).map(e =>
+        `- ${e.description}: $${e.amount.toFixed(2)} (${e.category}, ${e.date})`
+      ).join("\n"),
+    } : {}),
   };
 
   const send = async (overrideText?: string) => {
@@ -101,6 +156,7 @@ export default function AiAssistant({
 
       let clean = reply;
       let anyAction = false;
+      let pendingBulkDelete: PendingBulkDelete | undefined;
 
       for (const { name, re } of ACTION_TAGS) {
         for (const m of Array.from(reply.matchAll(re))) {
@@ -122,19 +178,68 @@ export default function AiAssistant({
             } else if (name === "SET_PRIORITY") {
               const t = findByMatch(tasks, payload.match);
               if (t && payload.priority) onSetPriority?.(t.id, payload.priority);
+            } else if (name === "BULK_ACTION") {
+              const matched = filterTasksForBulk(tasks, payload.filter);
+              const ids = matched.map(t => t.id);
+              if (ids.length === 0) { /* nothing matched — no-op */ }
+              else if (payload.action === "delete" && ids.length > 1) {
+                // Destructive + more than one task — don't auto-execute.
+                // Render an inline confirm/cancel pair instead (see message render below).
+                pendingBulkDelete = { ids, summary: summarizeByPriority(matched) };
+              } else if (payload.action === "delete") {
+                onBulkAction?.(ids, "delete");
+              } else if (payload.action === "complete" || payload.action === "reopen") {
+                onBulkAction?.(ids, payload.action);
+              }
+            } else if (name === "ADD_EXPENSE") {
+              const category: ExpenseCategory = EXPENSE_CATEGORIES.includes(payload.category) ? payload.category : "Other";
+              const saved = await createExpense({
+                description: String(payload.description ?? "Expense"),
+                amount: typeof payload.amount === "number" ? payload.amount : parseFloat(payload.amount) || 0,
+                category,
+              });
+              onExpenseCreated?.(saved);
+            } else if (name === "LINK_TASK") {
+              const exp = findExpenseByMatch(expenses ?? [], payload.from);
+              if (exp) {
+                const title = (typeof payload.title === "string" && payload.title.trim()) || `Invoice: ${exp.description}`;
+                const saved = await createTask({ title, priority: "medium", tags: [] });
+                onTaskCreated(saved);
+              }
             }
           } catch { /* malformed action payload — drop the tag, keep the reply text */ }
         }
         clean = clean.replace(re, "").trim();
       }
 
-      setMessages(prev => [...prev, { role: "assistant", content: anyAction ? clean : reply }]);
+      setMessages(prev => [...prev, { role: "assistant", content: anyAction ? clean : reply, pendingBulkDelete }]);
     } catch {
       setMessages(prev => [...prev, { role: "assistant", content: "Can't reach AI right now. Check your connection." }]);
     } finally {
       setLoading(false);
     }
   };
+
+  function confirmBulkDelete(index: number) {
+    setMessages(prev => {
+      const msg = prev[index];
+      if (!msg?.pendingBulkDelete) return prev;
+      onBulkAction?.(msg.pendingBulkDelete.ids, "delete");
+      const updated = [...prev];
+      updated[index] = { ...msg, pendingBulkDelete: undefined, content: `${msg.content} Done — deleted.` };
+      return updated;
+    });
+  }
+
+  function cancelBulkDelete(index: number) {
+    setMessages(prev => {
+      const msg = prev[index];
+      if (!msg?.pendingBulkDelete) return prev;
+      const updated = [...prev];
+      updated[index] = { ...msg, pendingBulkDelete: undefined, content: `${msg.content} Cancelled — nothing deleted.` };
+      return updated;
+    });
+  }
 
   const dots = ["●○○", "○●○", "○○●"][dotFrame];
 
@@ -272,14 +377,38 @@ export default function AiAssistant({
                       </div>
                     )}
 
-                    <div className="max-w-[82%] rounded px-3 py-2.5 text-[13px] leading-relaxed"
-                      style={{
-                        background: m.role === "user" ? "var(--gold-4)" : "var(--card-2)",
-                        color: m.role === "user" ? "#FFFFFF" : "var(--text)",
-                        borderRadius: m.role === "user" ? "12px 12px 2px 12px" : "2px 12px 12px 12px",
-                        border: m.role === "assistant" ? "1px solid var(--border-n)" : "none",
-                      }}>
-                      {m.content}
+                    <div className="max-w-[82%] flex flex-col gap-2">
+                      <div className="rounded px-3 py-2.5 text-[13px] leading-relaxed"
+                        style={{
+                          background: m.role === "user" ? "var(--gold-4)" : "var(--card-2)",
+                          color: m.role === "user" ? "#FFFFFF" : "var(--text)",
+                          borderRadius: m.role === "user" ? "12px 12px 2px 12px" : "2px 12px 12px 12px",
+                          border: m.role === "assistant" ? "1px solid var(--border-n)" : "none",
+                        }}>
+                        {m.content}
+                      </div>
+
+                      {/* Inline bulk-delete confirmation — destructive, so it
+                          doesn't execute until the person clicks Confirm. */}
+                      {m.pendingBulkDelete && (
+                        <div className="rounded px-3 py-2.5"
+                          style={{ background: "rgba(192,40,26,0.05)", border: "1px solid rgba(192,40,26,0.22)" }}>
+                          <p className="font-mono text-[10px] leading-relaxed" style={{ color: "var(--urgent)" }}>
+                            Delete {m.pendingBulkDelete.ids.length} tasks — {m.pendingBulkDelete.summary} — confirm?
+                          </p>
+                          <div className="mt-2 flex gap-2">
+                            <button onClick={() => confirmBulkDelete(i)}
+                              className="rounded px-3 py-1 font-mono text-[9px] uppercase tracking-[1px]"
+                              style={{ background: "var(--urgent)", color: "#FFFFFF" }}>
+                              Confirm
+                            </button>
+                            <button onClick={() => cancelBulkDelete(i)}
+                              className="btn-outline rounded px-3 py-1 font-mono text-[9px] uppercase tracking-[1px]">
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 ))}

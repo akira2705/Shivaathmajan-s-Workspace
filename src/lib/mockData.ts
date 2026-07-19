@@ -1,6 +1,8 @@
 export type Priority = "urgent" | "high" | "medium" | "low" | "followup";
 
-export type Recurrence = "none" | "daily" | "weekly";
+// "monthly" added for the recurring-pattern detection feature (a task
+// completed ~3 times a month apart gets suggested as monthly, not weekly).
+export type Recurrence = "none" | "daily" | "weekly" | "monthly";
 
 export interface SubTask {
   id: string;

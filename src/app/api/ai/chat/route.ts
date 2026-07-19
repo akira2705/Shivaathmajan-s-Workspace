@@ -17,7 +17,8 @@ What's on their plate:
 - ${context?.pendingCount ?? 0} tasks still pending
 - ${context?.urgentCount ?? 0} marked urgent
 - ${context?.todayCount ?? 0} due today
-${context?.taskSummary ? `\nTheir current task list:\n${context.taskSummary}` : ""}`;
+${context?.taskSummary ? `\nTheir current task list:\n${context.taskSummary}` : ""}
+${context?.expenseSummary ? `\nThey're also tracking expenses. This month's total so far: $${Number(context.expenseTotalMonth ?? 0).toFixed(2)}.\nRecent expenses:\n${context.expenseSummary}` : ""}`;
 
   const systemPrompt = buildSystemPrompt(contextBlock);
 

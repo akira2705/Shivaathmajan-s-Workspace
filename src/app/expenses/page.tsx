@@ -4,10 +4,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import SettingsModal from "@/components/SettingsModal";
+import AiAssistant from "@/components/AiAssistant";
 import { useApiKey } from "@/lib/useApiKey";
 import { todayStr, currentMonth } from "@/lib/date";
 import { fetchExpenses, createExpense, deleteExpense } from "@/lib/expenseApi";
 import { Expense, ExpenseCategory, EXPENSE_CATEGORIES, CATEGORY_META } from "@/lib/expenseData";
+import { fetchTasks, createTask, updateTask, deleteTaskApi, bulkActionApi } from "@/lib/api";
+import { Task, Priority } from "@/lib/mockData";
 
 type FilterMode = "all" | ExpenseCategory;
 
@@ -23,6 +26,11 @@ export default function ExpensesPage() {
   const [filter, setFilter]           = useState<FilterMode>("all");
   const [search, setSearch]           = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // Tasks are fetched here too (not rendered on this page) purely so the AI
+  // assistant mounted below has full cross-feature context/awareness and
+  // can act on ADD_TASK / LINK_TASK from the Expenses page, not just expenses.
+  const [tasks, setTasks] = useState<Task[]>([]);
 
   // Manual add form
   const [desc, setDesc]         = useState("");
@@ -43,6 +51,7 @@ export default function ExpensesPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+  useEffect(() => { fetchTasks().then(({ tasks: t }) => setTasks(t)).catch(() => {}); }, []);
 
   async function addManual() {
     const amt = parseFloat(amount);
@@ -84,6 +93,43 @@ export default function ExpensesPage() {
     await deleteExpense(id);
   }
 
+  // Deterministic one-click quick action — no AI call. Complements the
+  // LINK_TASK chat tag with a direct, non-AI version right on the row.
+  async function invoiceThis(expense: Expense) {
+    const saved = await createTask({ title: `Invoice: ${expense.description}`, priority: "medium", tags: [] });
+    setTasks((p) => [saved, ...p]);
+  }
+
+  // The AI assistant below is mounted with the real task list for cross-
+  // feature context, so it must be able to actually act on tasks too (not
+  // just add/link them) — otherwise "mark X done" from this page would
+  // silently no-op while still telling the user "Done." These mirror the
+  // equivalent handlers in tasks/page.tsx, operating on this page's local
+  // (unrendered) `tasks` state via the same api.ts calls.
+  async function completeTaskFromAi(id: string) {
+    setTasks((p) => p.map((t) => (t.id === id ? { ...t, done: true } : t)));
+    await updateTask(id, { done: true });
+  }
+  async function reopenTaskFromAi(id: string) {
+    setTasks((p) => p.map((t) => (t.id === id ? { ...t, done: false } : t)));
+    await updateTask(id, { done: false });
+  }
+  async function deleteTaskFromAi(id: string) {
+    setTasks((p) => p.filter((t) => t.id !== id));
+    await deleteTaskApi(id);
+  }
+  async function setPriorityFromAi(id: string, priority: Priority) {
+    setTasks((p) => p.map((t) => (t.id === id ? { ...t, priority } : t)));
+    await updateTask(id, { priority });
+  }
+  async function bulkActionFromAi(ids: string[], action: "complete" | "delete" | "reopen") {
+    if (!ids.length) return;
+    const apiAction = action === "complete" ? "done" : action === "reopen" ? "undone" : "delete";
+    await bulkActionApi(ids, apiAction);
+    if (apiAction === "delete") setTasks((p) => p.filter((t) => !ids.includes(t.id)));
+    else setTasks((p) => p.map((t) => (ids.includes(t.id) ? { ...t, done: apiAction === "done" } : t)));
+  }
+
   const filtered = useMemo(() => {
     let r = expenses;
     if (filter !== "all") r = r.filter((e) => e.category === filter);
@@ -105,6 +151,7 @@ export default function ExpensesPage() {
   const totalFiltered = useMemo(() => filtered.reduce((s, e) => s + e.amount, 0), [filtered]);
 
   return (
+    <>
     <AppShell
       active="expenses"
       title="Expenses"
@@ -297,6 +344,17 @@ export default function ExpensesPage() {
                       {fmtMoney(e.amount)}
                     </span>
                     <button
+                      onClick={() => invoiceThis(e)}
+                      className="shrink-0 flex h-7 w-7 items-center justify-center rounded"
+                      style={{ color: "var(--medium)", border: "1px solid rgba(59,91,166,0.25)" }}
+                      aria-label="Create invoice follow-up task"
+                      title="Invoice this — creates a follow-up task"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6M9 8h6M5 4.5h14A1.5 1.5 0 0 1 20.5 6v14A1.5 1.5 0 0 1 19 21.5H5A1.5 1.5 0 0 1 3.5 20V6A1.5 1.5 0 0 1 5 4.5Z" />
+                      </svg>
+                    </button>
+                    <button
                       onClick={() => remove(e.id)}
                       className="shrink-0 font-mono text-[10px] flex h-7 w-7 items-center justify-center rounded"
                       style={{ color: "var(--muted)", border: "1px solid var(--border-n)" }}
@@ -312,5 +370,21 @@ export default function ExpensesPage() {
 
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} apiKey={apiKey} onSave={setApiKey} />
     </AppShell>
+
+    {/* ── AI Assistant — expense-aware, so it can add expenses, add tasks,
+        and link a follow-up task to an expense via chat ─────────────── */}
+    <AiAssistant
+      apiKey={apiKey}
+      tasks={tasks}
+      expenses={expenses}
+      onTaskCreated={(task) => setTasks((p) => [task, ...p])}
+      onExpenseCreated={(expense) => setExpenses((p) => [expense, ...p])}
+      onCompleteTask={completeTaskFromAi}
+      onReopenTask={reopenTaskFromAi}
+      onDeleteTask={deleteTaskFromAi}
+      onSetPriority={setPriorityFromAi}
+      onBulkAction={bulkActionFromAi}
+    />
+    </>
   );
 }
