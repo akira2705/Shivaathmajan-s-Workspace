@@ -12,12 +12,20 @@ export default function Home() {
       <p className="font-mono text-sm uppercase tracking-[2px]" style={{ color: "var(--muted)" }}>
         A local-first task management demo — no backend, no account, your data stays in this browser.
       </p>
-      <Link
-        href="/tasks"
-        className="btn-gold rounded-full px-8 py-3 font-mono text-sm uppercase tracking-[1.5px]"
-      >
-        Open Tasks →
-      </Link>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <Link
+          href="/tasks"
+          className="btn-gold rounded-full px-8 py-3 font-mono text-sm uppercase tracking-[1.5px]"
+        >
+          Open Tasks →
+        </Link>
+        <Link
+          href="/expenses"
+          className="btn-outline rounded-full px-8 py-3 font-mono text-sm uppercase tracking-[1.5px]"
+        >
+          Open Expenses →
+        </Link>
+      </div>
     </main>
   );
 }

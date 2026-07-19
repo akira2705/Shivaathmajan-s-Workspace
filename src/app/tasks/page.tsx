@@ -431,12 +431,21 @@ export default function TasksPage() {
             {/* Nav pills — bottom of header (single-page demo: just Today) */}
             {!isMobile && (
               <div className="flex flex-wrap items-center gap-2 mt-5">
-                <Link href="/"
-                  className="nav-pill flex items-center gap-1.5 px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[1.4px]">
+                <span
+                  className="nav-pill flex items-center gap-1.5 px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[1.4px]"
+                  style={{ background: "rgba(255,255,255,0.10)", borderColor: "rgba(255,255,255,0.28)", color: "rgba(255,255,255,0.90)" }}
+                >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="14" height="14">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
                   </svg>
                   Today
+                </span>
+                <Link href="/expenses"
+                  className="nav-pill flex items-center gap-1.5 px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[1.4px]">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="14" height="14">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3M3.75 4.5h16.5A1.5 1.5 0 0 1 21.75 6v12a1.5 1.5 0 0 1-1.5 1.5H3.75A1.5 1.5 0 0 1 2.25 18V6a1.5 1.5 0 0 1 1.5-1.5Z" />
+                  </svg>
+                  Expenses
                 </Link>
               </div>
             )}
