@@ -1,0 +1,230 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════════════
+   GILDED EDITORIAL — TaskFlow Design System
+   Palette: Royal Navy #1B2454 × Gold #D8B45A × Warm Parchment #F0EBE0
+   ═══════════════════════════════════════════════════════════════════════ */
+:root {
+  /* ── Canvas ───────────────────────────────────────────── */
+  --bg:       #F0EBE0;
+  --surface:  #EAE3D5;
+  --card:     #FFFDF8;
+  --card-2:   #F8F4EC;
+
+  /* ── Header ───────────────────────────────────────────── */
+  --header:   #1B2454;
+  --header-2: #28368A;
+
+  /* ── Borders ──────────────────────────────────────────── */
+  --border:   rgba(32,36,63,0.10);
+  --border-n: rgba(32,36,63,0.07);
+  --border-2: rgba(32,36,63,0.14);
+  --border-3: rgba(32,36,63,0.22);
+
+  /* ── Text ─────────────────────────────────────────────── */
+  --text:     #20243F;
+  --text-2:   #4a4636;
+  --muted:    #7a7466;
+  --muted-2:  #9a948a;
+
+  /* ── Gold — the accent ────────────────────────────────── */
+  --gold-1:      #F4DC95;
+  --gold-2:      #D8B45A;
+  --gold-3:      #B68A38;
+  --gold-border: rgba(182,138,56,0.35);
+  --gold-glow:   rgba(182,138,56,0.12);
+
+  /* ── Priority (semantic) ──────────────────────────────── */
+  --urgent:   #9E2B3A;
+  --high:     #B5792A;
+  --medium:   #2E4A8F;
+  --low:      #2A7A4A;
+  --followup: #6B3FA0;
+}
+
+/* ─── Dark mode ─────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg:       #0F1120;
+  --surface:  #161928;
+  --card:     #1C2038;
+  --card-2:   #222844;
+  --border:   rgba(255,255,255,0.07);
+  --border-n: rgba(255,255,255,0.05);
+  --border-2: rgba(255,255,255,0.10);
+  --border-3: rgba(255,255,255,0.15);
+  --text:     #EEE8DC;
+  --text-2:   #B8B0A0;
+  --muted:    #7A7466;
+  --muted-2:  #5A5450;
+  color-scheme: dark;
+}
+
+/* ─── Print styles ───────────────────────────────────────────────────── */
+@media print {
+  header, nav, button, .fixed, .no-print { display: none !important; }
+  body { background: white !important; color: #000 !important; }
+  .task-card { break-inside: avoid; border: 1px solid #ccc !important; box-shadow: none !important; }
+}
+
+/* ─── Reset ──────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { color-scheme: light; scroll-behavior: smooth; }
+
+body {
+  font-family: system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+}
+
+/* ─── Selection ──────────────────────────────────────────────────────── */
+::selection { background: var(--gold-2); color: #fff; }
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(182,138,56,0.30); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(182,138,56,0.50); }
+
+/* ─── Hide number spinners ───────────────────────────────────────────── */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
+
+/* ─── Typography helpers ─────────────────────────────────────────────── */
+.font-serif  { font-family: Georgia, 'Times New Roman', serif; }
+.font-mono   { font-family: 'Courier New', monospace; }
+
+/* ─── Gold gradient text (shimmer) ──────────────────────────────────── */
+.gold-text-shimmer {
+  background: linear-gradient(135deg, var(--gold-1), var(--gold-2) 50%, var(--gold-3));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: shimmer 5s linear infinite;
+}
+@keyframes shimmer {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ─── Stat tile ──────────────────────────────────────────────────────── */
+.stat-tile {
+  background: var(--card);
+  border: 1px solid var(--gold-border);
+  border-radius: 4px;
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+  cursor: default;
+}
+.stat-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(182,138,56,0.14);
+  border-color: rgba(182,138,56,0.55);
+}
+
+/* ─── Task card ──────────────────────────────────────────────────────── */
+.task-card {
+  background: var(--card);
+  border: 1px solid rgba(32,36,63,0.08);
+  border-left: none;
+  border-radius: 0 3px 3px 0;
+  box-shadow: 0 1px 2px rgba(32,36,63,0.04);
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+.task-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 16px rgba(32,36,63,0.10);
+}
+
+/* ─── Gold rule divider ──────────────────────────────────────────────── */
+.gold-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-border) 20%, var(--gold-border) 80%, transparent);
+}
+
+/* ─── Primary gold button ────────────────────────────────────────────── */
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold-1), var(--gold-2) 50%, var(--gold-3));
+  color: #3A2A00;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+}
+.btn-gold:hover  { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(182,138,56,0.40); }
+.btn-gold:active { transform: translateY(0); box-shadow: none; }
+
+/* ─── Outline button ─────────────────────────────────────────────────── */
+.btn-outline {
+  border: 1px solid rgba(32,36,63,0.18);
+  color: var(--text-2);
+  background: transparent;
+  cursor: pointer;
+  transition: border-color 150ms, color 150ms, background 150ms;
+}
+.btn-outline:hover {
+  border-color: var(--gold-border);
+  color: var(--text);
+  background: var(--gold-glow);
+}
+
+/* ─── Focus glow wrapper ─────────────────────────────────────────────── */
+.glow-focus:focus-within {
+  border-color: var(--gold-border) !important;
+  box-shadow: 0 0 0 3px var(--gold-glow) !important;
+}
+
+/* ─── Board column ───────────────────────────────────────────────────── */
+.board-col {
+  background: var(--card-2);
+  border: 1px solid rgba(182,138,56,0.18);
+  border-radius: 4px;
+}
+
+/* ─── Priority badge hover ───────────────────────────────────────────── */
+.priority-hover-urgent:hover   { box-shadow: 0 5px 16px rgba(158,43,58,0.14); border-color: rgba(158,43,58,0.20) !important; }
+.priority-hover-high:hover     { box-shadow: 0 5px 16px rgba(181,121,42,0.14); border-color: rgba(181,121,42,0.20) !important; }
+.priority-hover-medium:hover   { box-shadow: 0 5px 16px rgba(46,74,143,0.14); border-color: rgba(46,74,143,0.20) !important; }
+.priority-hover-low:hover      { box-shadow: 0 5px 16px rgba(42,122,74,0.14); border-color: rgba(42,122,74,0.20) !important; }
+.priority-hover-followup:hover { box-shadow: 0 5px 16px rgba(107,63,160,0.14); border-color: rgba(107,63,160,0.20) !important; }
+
+/* ─── Nav pill (in header) ───────────────────────────────────────────── */
+.nav-pill {
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 99px;
+  color: rgba(255,255,255,0.65);
+  background: transparent;
+  cursor: pointer;
+  transition: background 150ms, border-color 150ms, color 150ms;
+}
+.nav-pill:hover {
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(255,255,255,0.28);
+  color: rgba(255,255,255,0.90);
+}
+
+/* ─── Clock panel (in header) ───────────────────────────────────────── */
+.clock-panel {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--gold-border);
+  border-radius: 6px;
+}
+
+/* ─── Glass surface (modals) ─────────────────────────────────────────── */
+.glass {
+  background: rgba(255,253,248,0.95);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--gold-border);
+}
+
+/* ─── Progress bar gold ──────────────────────────────────────────────── */
+.progress-bar-gold {
+  background: linear-gradient(90deg, var(--gold-1), var(--gold-2));
+  box-shadow: 0 0 8px rgba(182,138,56,0.35);
+}
